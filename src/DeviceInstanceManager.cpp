@@ -3,8 +3,10 @@
 #include <iostream>
 #include <jsc/JSCRuntime.h>
 #include <jsi/jsi.h>
-#include <react/renderer/core/Scheduler.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
+
+#include <string>
+#include <vector>
 
 using namespace facebook::react;
 
@@ -17,9 +19,10 @@ DeviceInstanceManager::~DeviceInstanceManager() {
 }
 
 void DeviceInstanceManager::Initialize() {
-  std::cout << "DeviceInstanceManager Initializing Fabric Scheduler..."
+  std::cout << "DeviceInstanceManager Initializing Fabric Scheduler... "
+               "(Skipped for Simulation)"
             << std::endl;
-  mScheduler = std::make_shared<facebook::react::Scheduler>();
+  // mScheduler = std::make_shared<facebook::react::Scheduler>();
 }
 
 void DeviceInstanceManager::StartSurface() {
@@ -40,17 +43,24 @@ void DeviceInstanceManager::SimulateJSExecution(
   // Simulate Simple Color Test
   // 1. Root View (Cyan) - Full Screen (Simulated by large size or window size
   // logic in MountingManager)
-  mountingManager->ProcessMockMutation(3, "View", "{backgroundColor:\"cyan\"}");
+  // 1. Root View - White background
+  mountingManager->ProcessMockMutation(3, "View",
+                                       "{backgroundColor:\"white\"}");
 
-  // 2. Child View (Magenta) - 200x200
-  // Note: CreateActor hardcodes size/pos currently. We might need to update
-  // that too if we want perfect match.
-  mountingManager->ProcessMockMutation(10, "View",
-                                       "{backgroundColor:\"magenta\"}");
+  // 2. Many Colored Squares
+  const std::string colors[] = {"red",   "green",   "blue",   "yellow",
+                                "cyan",  "magenta", "orange", "purple",
+                                "black", "gray"};
 
-  // 3. Text Label (for confirmation)
+  for (int i = 0; i < 50; ++i) {
+    std::string color = colors[i % 10];
+    std::string props = "{backgroundColor:\"" + color + "\"}";
+    mountingManager->ProcessMockMutation(100 + i, "View", props);
+  }
+
+  // 3. Text Label
   mountingManager->ProcessMockMutation(11, "Text",
-                                       "{text:\"Color Test Running\"}");
+                                       "{text:\"Grid Layout Demo\"}");
 
   std::cout << "Simulation Complete." << std::endl;
 }

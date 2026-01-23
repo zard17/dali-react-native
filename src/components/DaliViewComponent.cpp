@@ -25,9 +25,22 @@ void DaliViewComponent::ApplyProps(Dali::Toolkit::Control control,
     control.SetBackgroundColor(Dali::Color::BLUE);
   } else if (props.find("backgroundColor:\"red\"") != std::string::npos) {
     control.SetBackgroundColor(Dali::Color::RED);
+  } else if (props.find("backgroundColor:\"green\"") != std::string::npos) {
+    control.SetBackgroundColor(Dali::Color::GREEN);
+  } else if (props.find("backgroundColor:\"yellow\"") != std::string::npos) {
+    control.SetBackgroundColor(Dali::Color::YELLOW);
+  } else if (props.find("backgroundColor:\"white\"") != std::string::npos) {
+    control.SetBackgroundColor(Dali::Color::WHITE);
+  } else if (props.find("backgroundColor:\"black\"") != std::string::npos) {
+    control.SetBackgroundColor(Dali::Color::BLACK);
+  } else if (props.find("backgroundColor:\"gray\"") != std::string::npos) {
+    control.SetBackgroundColor(Dali::Vector4(0.5f, 0.5f, 0.5f, 1.0f));
+  } else if (props.find("backgroundColor:\"orange\"") != std::string::npos) {
+    control.SetBackgroundColor(Dali::Vector4(1.0f, 0.5f, 0.0f, 1.0f));
+  } else if (props.find("backgroundColor:\"purple\"") != std::string::npos) {
+    control.SetBackgroundColor(Dali::Vector4(0.5f, 0.0f, 0.5f, 1.0f));
   } else {
-    // Default or transparent
-    control.SetBackgroundColor(
-        Dali::Color::WHITE); // Default to white for visibility if unspecified
+    // Default
+    control.SetBackgroundColor(Dali::Color::TRANSPARENT);
   }
 }

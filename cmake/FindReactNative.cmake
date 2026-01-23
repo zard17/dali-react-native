@@ -8,6 +8,7 @@ set(DEPS_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party_dependencies/insta
 
 # 1. React Native Common Source Headers (from node_modules)
 set(React_INCLUDE_DIRS
+    ${RN_DIR}
     ${RN_COMMON_DIR}
     ${RN_COMMON_DIR}/callinvoker
     ${RN_COMMON_DIR}/react/renderer/core
@@ -20,6 +21,7 @@ set(React_INCLUDE_DIRS
     ${RN_COMMON_DIR}/react/renderer/graphics
     ${RN_COMMON_DIR}/react/renderer/imagemanager
     ${RN_COMMON_DIR}/react/renderer/debug
+    ${RN_COMMON_DIR}/runtimeexecutor
     ${RN_COMMON_DIR}/react/utils
     ${RN_COMMON_DIR}/cxxreact
     ${RN_COMMON_DIR}/jsi

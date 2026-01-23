@@ -2,7 +2,6 @@
 
 #include <dali/dali.h>
 #include <memory>
-#include <react/renderer/core/Scheduler.h>
 
 class DeviceInstanceManager {
 public:
@@ -17,5 +16,4 @@ public:
   void SimulateJSExecution(class DaliMountingManager *mountingManager);
 
 private:
-  std::shared_ptr<facebook::react::Scheduler> mScheduler;
 };

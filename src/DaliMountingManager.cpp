@@ -45,7 +45,7 @@ void DaliMountingManager::ProcessMockMutation(int tag,
       if (mWindow) {
         mWindow.Add(actor);
       }
-    } else if (tag == 10 || tag == 11) {
+    } else if (tag == 10 || tag == 11 || tag >= 100) {
       // Find root (Tag 3) and add
       auto rootIt = mActorRegistry.find(3);
       if (rootIt != mActorRegistry.end()) {
@@ -79,17 +79,35 @@ Dali::Actor DaliMountingManager::CreateActor(int tag, std::string componentName,
         view.SetProperty(Dali::Actor::Property::SIZE,
                          Dali::Vector2(1920, 1080));
       }
+    } else if (tag >= 100) {
+      // Grid Items
+      view.SetProperty(Dali::Actor::Property::SIZE, Dali::Vector2(100, 100));
+
+      int index = tag - 100;
+      int cols = 5;
+      int col = index % cols;
+      int row = index / cols;
+      float stride = 110.0f;
+      float startX = 50.0f;
+      float startY = 50.0f;
+
+      view.SetProperty(
+          Dali::Actor::Property::POSITION,
+          Dali::Vector3(startX + col * stride, startY + row * stride, 0));
+      view.SetProperty(Dali::Actor::Property::PARENT_ORIGIN,
+                       Dali::ParentOrigin::TOP_LEFT);
+      view.SetProperty(Dali::Actor::Property::ANCHOR_POINT,
+                       Dali::AnchorPoint::TOP_LEFT);
+
     } else {
       view.SetProperty(Dali::Actor::Property::SIZE,
-                       Dali::Vector2(200, 200)); // Child view
+                       Dali::Vector2(200, 200)); // Default Child view
+      view.SetProperty(Dali::Actor::Property::POSITION, Dali::Vector3(0, 0, 0));
     }
 
-    view.SetProperty(
-        Dali::Actor::Property::POSITION,
-        Dali::Vector3(
-            0, 0,
-            0)); // Root at 0,0. Child centered logic is property based usually.
-    // For child (Tag 10), let's center it manually for mock.
+    // Root (Tag 3) already handled above. Child (Tag 10) handled above.
+    // We can keep specific logic if needed, but for >100 we use grid.
+
     if (tag == 10) {
       view.SetProperty(Dali::Actor::Property::PARENT_ORIGIN,
                        Dali::ParentOrigin::CENTER);
