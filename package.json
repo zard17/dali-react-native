@@ -1,0 +1,16 @@
+{
+  "name": "dali-react-native",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "hermes-engine": "^0.11.0",
+    "react-native": "^0.83.1"
+  }
+}

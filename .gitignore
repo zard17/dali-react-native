@@ -1,0 +1,17 @@
+# Build directories
+build/
+cmake-build-*/
+.cache/
+
+# Dependencies
+node_modules/
+# Ignore everything in third_party_dependencies -> logic:
+# 1. Ignore content of third_party_dependencies
+third_party_dependencies/*
+# 2. But allow build_react_native dir
+!third_party_dependencies/build_react_native/
+# 3. Ignore content of build_react_native
+third_party_dependencies/build_react_native/*
+# 4. But allow specific files
+!third_party_dependencies/build_react_native/CMakeLists.txt
+!third_party_dependencies/build_react_native/dummy.cpp
