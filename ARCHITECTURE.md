@@ -11,8 +11,8 @@ The system bridges the **React Native Fabric** C++ core with the **DALi** Scene 
 ```mermaid
 graph TD
     subgraph "React Native Layer"
-        JS[JavaScript Code (index.js)] -->|React| RT[React Runtime]
-        RT -->|JSI| Fabric[Fabric UIManager (C++)]
+        JS["JavaScript Code (index.js)"] -->|React| RT[React Runtime]
+        RT -->|JSI| Fabric["Fabric UIManager (C++)"]
         Fabric -->|Shadow Tree| ST[Shadow Nodes]
         ST -->|Layout| Yoga[Yoga Layout Engine]
     end
