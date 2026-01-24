@@ -16,4 +16,5 @@ public:
   void SimulateJSExecution(class DaliMountingManager *mountingManager);
 
 private:
+  void RenderAppDemo(class DaliMountingManager *mountingManager);
 };

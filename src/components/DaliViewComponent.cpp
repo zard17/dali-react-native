@@ -15,8 +15,39 @@ void DaliViewComponent::ApplyProps(Dali::Toolkit::Control control,
                                    const std::string &props) {
   // Parse props string (mock) and apply
   // In real Fabric, props is Folly::dynamic or specific struct
-  std::cout << "Applying props to View: " << props << std::endl;
+  // Parse Layout Props (x, y, width, height)
+  // Format: ", x:100, y:200, width:50, height:50"
 
+  auto parseValue = [&](std::string key) -> float {
+    size_t pos = props.find(key);
+    if (pos != std::string::npos) {
+      size_t valStart = pos + key.length();
+      size_t valEnd = props.find_first_of(",}", valStart);
+      if (valEnd != std::string::npos) {
+        try {
+          return std::stof(props.substr(valStart, valEnd - valStart));
+        } catch (...) {
+          return 0.0f;
+        }
+      }
+    }
+    return -1.0f; // Sentinel
+  };
+
+  float x = parseValue("x:");
+  float y = parseValue("y:");
+  float w = parseValue("width:");
+  float h = parseValue("height:");
+
+  if (x != -1.0f && y != -1.0f) {
+    control.SetProperty(Dali::Actor::Property::POSITION,
+                        Dali::Vector3(x, y, 0));
+  }
+  if (w != -1.0f && h != -1.0f) {
+    control.SetProperty(Dali::Actor::Property::SIZE, Dali::Vector2(w, h));
+  }
+
+  // Parse Colors
   if (props.find("backgroundColor:\"cyan\"") != std::string::npos) {
     control.SetBackgroundColor(Dali::Color::CYAN);
   } else if (props.find("backgroundColor:\"magenta\"") != std::string::npos) {

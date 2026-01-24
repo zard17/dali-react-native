@@ -1,12 +1,13 @@
 #pragma once
 
 #include <dali/dali.h>
+#include <functional>
 #include <react/renderer/mounting/MountingCoordinator.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <string>
 #include <unordered_map>
 
-class DaliMountingManager {
+class DaliMountingManager : public Dali::ConnectionTracker {
 public:
   DaliMountingManager();
   ~DaliMountingManager();
@@ -18,7 +19,7 @@ public:
 
   // void ProcessMutation(facebook::react::ShadowViewMutation const &mutation);
   // // Real one
-  void ProcessMockMutation(int tag, std::string componentName,
+  void ProcessMockMutation(int tag, int parentTag, std::string componentName,
                            std::string props);
 
 private:
@@ -28,4 +29,14 @@ private:
 
   Dali::Actor CreateActor(int tag, std::string componentName,
                           std::string props);
+
+  // Event Handling
+  void DispatchEvent(int tag, std::string eventName);
+
+public:
+  void SetEventCallback(std::function<void(int, std::string)> callback);
+
+private:
+  std::function<void(int, std::string)> mEventCallback;
+  bool OnTouch(Dali::Actor actor, const Dali::TouchEvent &event);
 };
