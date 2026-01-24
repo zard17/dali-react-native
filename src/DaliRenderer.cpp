@@ -21,6 +21,11 @@ void DaliRenderer::Init(Dali::Application &application) {
 
   mMountingManager->SetWindow(application.GetWindow());
 
-  // Run the simulation
-  mDeviceInstanceManager->SimulateJSExecution(mMountingManager.get());
+  // Load JavaScript bundle and start React app
+  mDeviceInstanceManager->LoadJSBundle("bundle.js");
+  mDeviceInstanceManager->StartSurface();
+  mDeviceInstanceManager->StartReactApp("DaliRNApp", 1);
+
+  // Deprecated:
+  // mDeviceInstanceManager->SimulateJSExecution(mMountingManager.get());
 }

@@ -1,5 +1,7 @@
 #include "DeviceInstanceManager.h"
 #include "DaliMountingManager.h"
+#include "TurboModuleRegistry.h"
+#include <fstream>
 #include <iostream>
 #include <jsc/JSCRuntime.h>
 #include <jsi/jsi.h>
@@ -91,9 +93,23 @@ void DeviceInstanceManager::Initialize() {
   std::cout << "  -> Scheduler Created" << std::endl;
 
   // 7. Surface Handler
-  // Create surface handler for "DaliApp" with surfaceId 11
-  mSurfaceHandler.emplace("DaliApp", 11);
+  // Create surface handler for "DaliRNApp" with surfaceId 1 (must match
+  // rootTag)
+  mSurfaceHandler.emplace("DaliRNApp", 1);
   mSurfaceHandler->setContextContainer(mContextContainer);
+
+  // Set layout constraints (required before starting surface)
+  LayoutConstraints layoutConstraints;
+  layoutConstraints.layoutDirection = LayoutDirection::LeftToRight;
+  layoutConstraints.minimumSize = Size{0, 0};
+  layoutConstraints.maximumSize = Size{1920, 1080};
+
+  LayoutContext layoutContext;
+  layoutContext.pointScaleFactor = 1.0f;
+  layoutContext.fontSizeMultiplier = 1.0f;
+  layoutContext.viewportOffset = {0, 0};
+
+  mSurfaceHandler->constraintLayout(layoutConstraints, layoutContext);
 
   // Register surface with Scheduler
   mScheduler->registerSurface(*mSurfaceHandler);
@@ -176,6 +192,73 @@ void DeviceInstanceManager::schedulerShouldSynchronouslyUpdateViewOnUIThread(
 void DeviceInstanceManager::schedulerDidUpdateShadowTree(
     const std::unordered_map<facebook::react::Tag, folly::dynamic>
         &tagToProps) {}
+
+void DeviceInstanceManager::LoadJSBundle(const std::string &bundlePath) {
+  std::cout << "Loading JavaScript bundle: " << bundlePath << std::endl;
+
+  // Setup global object (required for JSC)
+  mRuntime->global().setProperty(*mRuntime, "global", mRuntime->global());
+  std::cout << "  -> Global object set" << std::endl;
+
+  // Install TurboModuleRegistry via JSI (replaces JavaScript mock)
+  TurboModuleRegistry::install(*mRuntime);
+
+  // Provide minimal native module configuration
+  // This prevents the __fbBatchedBridgeConfig error
+  const char *nativeModuleConfig =
+      "global.__fbBatchedBridgeConfig = { remoteModuleConfig: [], "
+      "localModulesConfig: [] };";
+  auto configBuffer =
+      std::make_shared<facebook::jsi::StringBuffer>(nativeModuleConfig);
+  mRuntime->evaluateJavaScript(configBuffer, "nativeModuleConfig.js");
+  std::cout << "  -> Native module config set" << std::endl;
+
+  // Read bundle file
+  std::ifstream bundleFile(bundlePath);
+  if (!bundleFile.is_open()) {
+    std::cerr << "ERROR: Failed to open bundle file: " << bundlePath
+              << std::endl;
+    return;
+  }
+
+  std::string bundleContent((std::istreambuf_iterator<char>(bundleFile)),
+                            std::istreambuf_iterator<char>());
+  bundleFile.close();
+
+  std::cout << "  -> Bundle size: " << bundleContent.size() << " bytes"
+            << std::endl;
+
+  // Evaluate JavaScript in JSI runtime
+  try {
+    auto buffer = std::make_shared<facebook::jsi::StringBuffer>(bundleContent);
+    mRuntime->evaluateJavaScript(buffer, bundlePath);
+    std::cout << "  -> Bundle executed successfully" << std::endl;
+  } catch (const facebook::jsi::JSIException &e) {
+    std::cerr << "ERROR: Failed to execute bundle: " << e.what() << std::endl;
+  } catch (const std::exception &e) {
+    std::cerr << "ERROR: Exception during bundle execution: " << e.what()
+              << std::endl;
+  }
+}
+
+void DeviceInstanceManager::StartReactApp(const std::string &appName,
+                                          int rootTag) {
+  std::cout << "Starting React app: " << appName << " (rootTag: " << rootTag
+            << ")" << std::endl;
+
+  try {
+    // Execute: AppRegistry.runApplication('appName', { rootTag: rootTag })
+    std::string jsCode = "AppRegistry.runApplication('" + appName +
+                         "', { rootTag: " + std::to_string(rootTag) + " });";
+    auto buffer = std::make_shared<facebook::jsi::StringBuffer>(jsCode);
+    mRuntime->evaluateJavaScript(buffer, "startApp.js");
+    std::cout << "  -> React app started" << std::endl;
+  } catch (const facebook::jsi::JSIException &e) {
+    std::cerr << "ERROR: Failed to start React app: " << e.what() << std::endl;
+  } catch (const std::exception &e) {
+    std::cerr << "ERROR: Exception during app start: " << e.what() << std::endl;
+  }
+}
 
 void DeviceInstanceManager::SimulateJSExecution(
     DaliMountingManager *mountingManager) {

@@ -28,6 +28,10 @@ public:
   void StartSurface();
   void StopSurface();
 
+  // JavaScript Bundle Loading
+  void LoadJSBundle(const std::string &bundlePath);
+  void StartReactApp(const std::string &appName, int rootTag);
+
   // Simulates the JS bridge sending mutations
   void SimulateJSExecution(class DaliMountingManager *mountingManager);
 
