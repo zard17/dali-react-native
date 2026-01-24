@@ -29,6 +29,10 @@ set(React_INCLUDE_DIRS
     ${RN_COMMON_DIR}/yoga
     ${RN_COMMON_DIR}/react/renderer/graphics/platform/cxx
     ${RN_COMMON_DIR}/react/renderer/components/view/platform/cxx
+    ${RN_COMMON_DIR}/react/renderer/imagemanager/platform/cxx
+    ${RN_COMMON_DIR}/react/renderer/components/text/platform/cxx
+    ${RN_COMMON_DIR}/react/renderer/textlayoutmanager/platform/cxx
+    ${RN_COMMON_DIR}/reactperflogger
 )
 
 # 2. Third Party Install Headers (Folly, Glog, Yoga, etc.)

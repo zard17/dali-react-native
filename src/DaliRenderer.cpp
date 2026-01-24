@@ -17,6 +17,7 @@ void DaliRenderer::Init(Dali::Application &application) {
   mDeviceInstanceManager->Initialize();
 
   mMountingManager = std::make_unique<DaliMountingManager>();
+  mDeviceInstanceManager->SetMountingManager(mMountingManager.get());
 
   mMountingManager->SetWindow(application.GetWindow());
 

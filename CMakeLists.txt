@@ -27,7 +27,32 @@ add_executable(dali-rn-demo
   src/DaliMountingManager.cpp
   src/components/DaliViewComponent.cpp
   src/components/DaliTextComponent.cpp
+  src/components/DaliViewComponent.cpp
+  src/components/DaliTextComponent.cpp
   src/components/DaliImageComponent.cpp
+  "${RN_COMMON_DIR}/jsi/jsi/jsi.cpp"
+  "${RN_COMMON_DIR}/jsinspector-modern/tracing/EventLoopReporter.cpp"
+  "${RN_COMMON_DIR}/react/renderer/uimanager/UIManagerBinding.cpp"
+  "${RN_COMMON_DIR}/react/performance/cdpmetrics/CdpPerfIssuesReporter.cpp"
+  "${RN_COMMON_DIR}/react/performance/timeline/PerformanceEntryReporter.cpp"
+  "${RN_COMMON_DIR}/react/renderer/dom/DOM.cpp"
+  "${RN_COMMON_DIR}/react/renderer/uimanager/consistency/LazyShadowTreeRevisionConsistencyManager.cpp"
+  "${RN_COMMON_DIR}/react/renderer/uimanager/consistency/LazyShadowTreeRevisionConsistencyManager.cpp"
+  "${RN_COMMON_DIR}/reactperflogger/reactperflogger/ReactPerfettoLogger.cpp"
+  "${RN_COMMON_DIR}/react/performance/timeline/PerformanceEntryCircularBuffer.cpp"
+  "${RN_COMMON_DIR}/react/performance/timeline/PerformanceEntryKeyedBuffer.cpp"
+  "${RN_COMMON_DIR}/react/performance/timeline/PerformanceObserver.cpp"
+  "${RN_COMMON_DIR}/react/performance/timeline/PerformanceObserver.cpp"
+  "${RN_COMMON_DIR}/react/performance/timeline/PerformanceObserverRegistry.cpp"
+  "${RN_COMMON_DIR}/jsi/jsi/JSIDynamic.cpp"
+  "${RN_COMMON_DIR}/jsinspector-modern/tracing/PerformanceTracer.cpp"
+  "${RN_COMMON_DIR}/react/performance/cdpmetrics/CdpMetricsReporter.cpp"
+  "${RN_COMMON_DIR}/react/renderer/observers/events/EventPerformanceLogger.cpp"
+  "${RN_COMMON_DIR}/jsinspector-modern/network/HttpUtils.cpp"
+  "${RN_COMMON_DIR}/jsinspector-modern/tracing/TraceEventSerializer.cpp"
+  "${RN_COMMON_DIR}/react/performance/cdpmetrics/CdpInteractionTypes.cpp"
+  "${RN_COMMON_DIR}/jsinspector-modern/network/CdpNetwork.cpp"
+  "${RN_COMMON_DIR}/react/renderer/runtimescheduler/RuntimeScheduler.cpp"
 )
 
 target_link_libraries(dali-rn-demo
