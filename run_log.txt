@@ -1,0 +1,96 @@
+window-impl.cpp: SetScreen(1783) > input Screen name is empty
+application-impl.cpp: OnInit(587) > Application::OnInit
+graphics-backend-impl.cpp: SetGraphicsBackend(55) > current state: UNSET
+graphics-backend-impl.cpp: SetGraphicsBackend(67) > Graphics backend set to: GLES
+graphics-backend-impl.cpp: SetGraphicsBackend(74) > changed state: FIXED
+application-impl.cpp: CompleteAdaptorAndWindowCreate(487) > default Window is created in standalone
+application-impl.cpp: CreateWindow(349) > Create Default Window
+window-impl.cpp: Initialize(147) > Window::Initialize, isUsePreLoader(0)
+window-impl.cpp: Initialize(204) > Window size is set with screen size(1512 x 982)
+application-impl.cpp: CreateWindow(401) > Main window created done
+application-impl.cpp: CreateAdaptor(411) > CreateAdaptor!
+egl-graphics-factory.cpp: CreateGraphicsFactory(91) > DALi Graphics Backend: GLES
+[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Initialize(142) > Adaptor::Initialize
+[0m[1;32mINFO:[21;24m DALI: egl-graphics-controller.cpp: InitializeGLES(207) > Initializing Graphics Controller Phase 1
+[0m[1;32mINFO:[21;24m DALI: core-impl.cpp: Core(138) > Core policy enum : 0xe
+[0m[1;32mINFO:[21;24m DALI: scene-impl.cpp: ChangedSurface(431) > Send Surface Rect Message, width[1512], height[982]
+[0m[1;32mINFO:[21;24m DALI: window-impl.cpp: OnAccessibilityDisabled(1260) > Window (0x14e028570), WinId (2504), Accessibility is disabled
+[0m[1;32mINFO:[21;24m DALI: window-impl.cpp: OnAdaptorSet(276) > mIsUsePreLoader flag (0)
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: OnWindowShown(1172) > Adaptor::OnWindowShown: Adaptor is not paused state.[0]
+[0m[1;32mINFO:[21;24m DALI: window-impl.cpp: Show(618) > Window (0x14e028570), WinId (2504), Show(): iconified = 0, visible = 1
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: UpdateDefaultFrameDurations(595) > Frame duration changed : 60.000000 fps, 1 frame per render
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: CombinedUpdateRenderController(178) > CombinedUpdateRenderController::CombinedUpdateRenderController
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Initialize(231) > Check and create dali system cache directory: /Users/youngsus/.cache/dali_common_caches/
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Initialize(250) > Check and create dali internal shader cache directory: /Users/youngsus/.cache/dali_common_caches/shader/internal/
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Initialize(259) > Check and create dali custom shader cache directory: /Users/youngsus/.cache/dali_common_caches/shader/custom/
+[0m[1;32mINFO:[21;24m DALI: GraphicsBackend = GLES
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(167) > Fail to read file : /Users/youngsus/.cache/dali_common_caches/gpu-environment-gles.conf
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(168) > errno [17] File exists
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Initialize(272) > Core::Initialize
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Initialize(275) > Adaptor::Initialize: Initialized
+[0m[1;32mINFO:[21;24m DALI: application-impl.cpp: CompleteAdaptorAndWindowCreate(491) > Standalone Application with standalone Adaptor
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: Initialize(207) > CombinedUpdateRenderController::Initialize
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: UpdateRenderThread(615) > BEGIN: DALI_RENDER_THREAD_INIT
+[0m[1;32mINFO:[21;24m DALI: egl-graphics-controller.cpp: Initialize(223) > Initializing Graphics Controller Phase 2
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(167) > Fail to read file : /Users/youngsus/.cache/dali_common_caches/gpu-environment-gles.conf
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(168) > errno [17] File exists
+[0m[1;32mINFO:[21;24m DALI: EGL Information
+            PartialUpdate  0
+            Vendor:        Google Inc. (Apple)
+            Version:       1.5 (ANGLE 2.1.7258 git hash: d9fc4a372074)
+            Client APIs:   OpenGL_ES
+            Extensions:    EGL_KHR_create_context EGL_KHR_get_all_proc_addresses EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_iosurface_client_buffer EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_wait_until_work_scheduled EGL_ANGLE_create_context_backwards_compatible EGL_KHR_create_context_no_error EGL_KHR_reusable_sync EGL_ANGLE_memory_usage_report 
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: NotifyGraphicsInitialised(1317) > NotifyGraphicsInitialised
+[0m[1;32mINFO:[21;24m DALI: Using OpenGL es 3.0.
+[0m[1;32mINFO:[21;24m DALI: gles-context.cpp: InitializeGlState(225) > GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: 32
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: NotifyThreadInitialised(1310) > NotifyThreadInitialised
+[0m[1;32mINFO:[21;24m DALI: MaxTextureSize = 16384
+[0m[1;32mINFO:[21;24m DALI: Using OpenGL es 3.0.
+[0m[1;32mINFO:[21;24m DALI: window-render-surface.cpp: CreateSurface(715) > WindowRenderSurface::CreateSurface: SurfaceId(1) WinId (2504), w = 1512 h = 982 angle = 0 screen rotation = 0
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: UpdateRenderThread(672) > END: DALI_RENDER_THREAD_INIT
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(167) > Fail to read file : /Users/youngsus/.cache/dali_common_caches/gpu-environment-gles.conf
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(168) > errno [17] File exists
+[0m[1;32mINFO:[21;24m DALI: IsAdvancedBlendEquationSupported = 0
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(167) > Fail to read file : /Users/youngsus/.cache/dali_common_caches/gpu-environment-gles.conf
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(168) > errno [17] File exists
+[0m[1;32mINFO:[21;24m DALI: IsMultisampledRenderToTextureSupported = 0
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(167) > Fail to read file : /Users/youngsus/.cache/dali_common_caches/gpu-environment-gles.conf
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(168) > errno [17] File exists
+[0m[1;32mINFO:[21;24m DALI: ShaderLanguageVersion = 300
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Start(390) > Adaptor::Start: Started
+[0mDaliRenderer Constructed
+DaliRenderer Init called
+DeviceInstanceManager Created
+DeviceInstanceManager Initializing...
+  -> JS Runtime Initialized
+  -> Runtime Executor Created
+  -> Context Container Created
+  -> Component Providers Registered
+  -> RuntimeScheduler Created and Registered
+  -> Scheduler Created
+  -> SurfaceHandler Registered
+DaliMountingManager Created
+Loading JavaScript bundle: bundle.js
+  -> Global object set
+  -> Installing __turboModuleProxy...
+  -> __turboModuleProxy installed via JSI
+  -> Native module config set
+  -> Bundle size: 1011441 bytes
+  -> TurboModule requested (unknown): NativePerformanceCxx
+  -> TurboModule requested (unknown): NativeReactNativeFeatureFlagsCxx
+  -> Bundle executed successfully
+Starting React Native Surface...
+  -> TurboModule requested: UIManager
+  -> UIManager module created
+  -> TurboModule requested (unknown): NativeDOMCxx
+libc++abi: terminating due to uncaught exception of type facebook::jsi::JSError: v.default.linkRootNode is not a function. (In 'v.default.linkRootNode(e,n)', 'v.default.linkRootNode' is undefined)
+
+h@bundle.js:144:1728
+o@bundle.js:144:750
+@bundle.js:144:209
+@bundle.js:300:247
+@bundle.js:125:119384
+@bundle.js:123:605
+@bundle.js:264:821
+@bundle.js:261:2684
+@bundle.js:261:1359

@@ -247,9 +247,24 @@ void DeviceInstanceManager::StartReactApp(const std::string &appName,
             << ")" << std::endl;
 
   try {
-    // Execute: AppRegistry.runApplication('appName', { rootTag: rootTag })
-    std::string jsCode = "AppRegistry.runApplication('" + appName +
-                         "', { rootTag: " + std::to_string(rootTag) + " });";
+    // Execute: require('react-native').AppRegistry.runApplication('appName', {
+    // rootTag: rootTag }) We need to use require() since AppRegistry might not
+    // be global
+    std::string jsCode =
+        "try { "
+        "  const { AppRegistry } = require('react-native'); "
+        "  AppRegistry.runApplication('" +
+        appName + "', { rootTag: " + std::to_string(rootTag) +
+        " }); "
+        "} catch (e) { "
+        "  console.error('Failed to run app:', e); "
+        "  if (global.TurboModuleRegistry && "
+        "global.TurboModuleRegistry.getEnforcing('ExceptionsManager')) { "
+        "    "
+        "global.TurboModuleRegistry.getEnforcing('ExceptionsManager')."
+        "reportFatalException(e.message, [], 0); "
+        "  } "
+        "}";
     auto buffer = std::make_shared<facebook::jsi::StringBuffer>(jsCode);
     mRuntime->evaluateJavaScript(buffer, "startApp.js");
     std::cout << "  -> React app started" << std::endl;

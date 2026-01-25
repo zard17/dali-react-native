@@ -18,9 +18,10 @@ void DaliMountingManager::SetWindow(Dali::Window window) { mWindow = window; }
 
 void DaliMountingManager::PerformTransaction(
     MountingTransaction const &transaction) {
-  // std::cout << "Processing Transaction..." << std::endl;
+  std::cout << "Processing Transaction..." << std::endl;
   // Mock loop
-  // for (auto &mut : transaction.getMutations()) ProcessMutation(mut);
+  // for (auto &mut : transaction.getMutations()) ProcessMockMutation(mut.tag,
+  // mut.parentTag, "View", "{}");
 }
 
 void DaliMountingManager::ProcessMockMutation(int tag, int parentTag,
