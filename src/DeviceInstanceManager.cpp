@@ -8,6 +8,7 @@
 #include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
 #include <react/renderer/runtimescheduler/RuntimeScheduler.h>
 #include <react/renderer/scheduler/SchedulerToolbox.h>
+#include <react/renderer/uimanager/UIManagerBinding.h>
 
 using namespace facebook::react;
 
@@ -91,6 +92,12 @@ void DeviceInstanceManager::Initialize() {
   // Note: Animation delegate can be nullptr for now
   mScheduler = std::make_shared<Scheduler>(toolbox, nullptr, this);
   std::cout << "  -> Scheduler Created" << std::endl;
+
+  // 6.5. Install Fabric UIManager Binding (JSI)
+  // This creates 'nativeFabricUIManager' in global
+  UIManagerBinding::createAndInstallIfNeeded(*mRuntime,
+                                             mScheduler->getUIManager());
+  std::cout << "  -> UIManagerBinding Installed" << std::endl;
 
   // 7. Surface Handler
   // Create surface handler for "DaliRNApp" with surfaceId 1 (must match
@@ -247,22 +254,26 @@ void DeviceInstanceManager::StartReactApp(const std::string &appName,
             << ")" << std::endl;
 
   try {
-    // Execute: require('react-native').AppRegistry.runApplication('appName', {
-    // rootTag: rootTag }) We need to use require() since AppRegistry might not
-    // be global
+    // Execute: AppRegistry.runApplication('appName', { rootTag: rootTag })
+    // AppRegistry is now exposed globally in index.js
     std::string jsCode =
         "try { "
-        "  const { AppRegistry } = require('react-native'); "
         "  AppRegistry.runApplication('" +
-        appName + "', { rootTag: " + std::to_string(rootTag) +
-        " }); "
+        appName +
+        "', { "
+        "    rootTag: " +
+        std::to_string(rootTag) +
+        ", "
+        "    initialProps: { concurrentRoot: true }, "
+        "    fabric: true "
+        "  }); "
         "} catch (e) { "
         "  console.error('Failed to run app:', e); "
         "  if (global.TurboModuleRegistry && "
         "global.TurboModuleRegistry.getEnforcing('ExceptionsManager')) { "
         "    "
         "global.TurboModuleRegistry.getEnforcing('ExceptionsManager')."
-        "reportFatalException(e.message, [], 0); "
+        "reportFatalException(e.error ? e.error.message : e.message, [], 0); "
         "  } "
         "}";
     auto buffer = std::make_shared<facebook::jsi::StringBuffer>(jsCode);

@@ -15,3 +15,4 @@ const App = () => {
 };
 
 AppRegistry.registerComponent('DaliRNApp', () => App);
+global.AppRegistry = AppRegistry;

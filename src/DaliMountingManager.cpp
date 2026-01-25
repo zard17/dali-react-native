@@ -19,9 +19,46 @@ void DaliMountingManager::SetWindow(Dali::Window window) { mWindow = window; }
 void DaliMountingManager::PerformTransaction(
     MountingTransaction const &transaction) {
   std::cout << "Processing Transaction..." << std::endl;
-  // Mock loop
-  // for (auto &mut : transaction.getMutations()) ProcessMockMutation(mut.tag,
-  // mut.parentTag, "View", "{}");
+
+  for (const auto &mut : transaction.getMutations()) {
+    int tag = -1;
+    std::string typeStr;
+    std::string componentName = "Unknown";
+
+    // Determine tag and type based on mutation type
+    if (mut.type == facebook::react::ShadowViewMutation::Type::Create) {
+      tag = mut.newChildShadowView.tag;
+      typeStr = "Create";
+      if (mut.newChildShadowView.componentName) {
+        componentName = mut.newChildShadowView.componentName;
+      }
+    } else if (mut.type == facebook::react::ShadowViewMutation::Type::Delete) {
+      tag = mut.oldChildShadowView.tag;
+      typeStr = "Delete";
+    } else if (mut.type == facebook::react::ShadowViewMutation::Type::Insert) {
+      tag = mut.newChildShadowView.tag;
+      typeStr = "Insert";
+      if (mut.newChildShadowView.componentName) {
+        componentName = mut.newChildShadowView.componentName;
+      }
+    } else if (mut.type == facebook::react::ShadowViewMutation::Type::Remove) {
+      tag = mut.oldChildShadowView.tag;
+      typeStr = "Remove";
+    } else if (mut.type == facebook::react::ShadowViewMutation::Type::Update) {
+      tag = mut.newChildShadowView.tag;
+      typeStr = "Update";
+      if (mut.newChildShadowView.componentName) {
+        componentName = mut.newChildShadowView.componentName;
+      }
+    }
+
+    std::cout << "Mutation: " << typeStr << " Tag=" << tag
+              << " ParentTag=" << mut.parentTag
+              << " Component=" << componentName << std::endl;
+
+    // Forward to mock processor for visualization
+    ProcessMockMutation(tag, mut.parentTag, componentName, "{}");
+  }
 }
 
 void DaliMountingManager::ProcessMockMutation(int tag, int parentTag,

@@ -100,16 +100,21 @@ void TurboModuleRegistry::install(jsi::Runtime &runtime) {
                 rt, jsi::PropNameID::forAscii(rt, "createTimer"), 4,
                 [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args,
                    size_t) -> jsi::Value {
-                  // Mock createTimer
+                  double id = args[0].getNumber();
+                  double duration = args[1].getNumber();
+                  std::cout << "  -> Timing.createTimer(id=" << id
+                            << ", duration=" << duration << ")" << std::endl;
                   return jsi::Value::undefined();
                 });
             module.setProperty(rt, "createTimer", std::move(createTimer));
 
             auto deleteTimer = jsi::Function::createFromHostFunction(
                 rt, jsi::PropNameID::forAscii(rt, "deleteTimer"), 1,
-                [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *,
+                [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args,
                    size_t) -> jsi::Value {
-                  // Mock deleteTimer
+                  double id = args[0].getNumber();
+                  std::cout << "  -> Timing.deleteTimer(id=" << id << ")"
+                            << std::endl;
                   return jsi::Value::undefined();
                 });
             module.setProperty(rt, "deleteTimer", std::move(deleteTimer));
