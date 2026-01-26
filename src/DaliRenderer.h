@@ -4,7 +4,7 @@
 #include <iostream>
 #include <memory>
 
-class DaliRenderer {
+class DaliRenderer : public Dali::ConnectionTracker {
 public:
   DaliRenderer();
   ~DaliRenderer();
@@ -12,6 +12,8 @@ public:
   void Init(Dali::Application &application);
 
 private:
+  bool OnEventLoopTick();
   std::unique_ptr<class DeviceInstanceManager> mDeviceInstanceManager;
   std::unique_ptr<class DaliMountingManager> mMountingManager;
+  Dali::Timer mEventLoopTimer;
 };

@@ -74,18 +74,18 @@ void DeviceInstanceManager::Initialize() {
 
   // 5.4. Create and Register RuntimeScheduler in ContextContainer
   // The Scheduler expects to find RuntimeScheduler in the ContextContainer
-  auto runtimeScheduler = std::make_shared<RuntimeScheduler>(runtimeExecutor);
+  mRuntimeScheduler = std::make_shared<RuntimeScheduler>(runtimeExecutor);
   mContextContainer->insert("RuntimeScheduler",
-                            std::weak_ptr<RuntimeScheduler>(runtimeScheduler));
+                            std::weak_ptr<RuntimeScheduler>(mRuntimeScheduler));
   std::cout << "  -> RuntimeScheduler Created and Registered" << std::endl;
 
   // 5.5. Event Beat Factory
   // The Scheduler needs an EventBeat factory to create event processing beats
   toolbox.eventBeatFactory =
-      [runtimeScheduler](std::shared_ptr<EventBeat::OwnerBox> ownerBox)
+      [this](std::shared_ptr<EventBeat::OwnerBox> ownerBox)
       -> std::unique_ptr<EventBeat> {
     // Create an EventBeat with the RuntimeScheduler reference
-    return std::make_unique<EventBeat>(ownerBox, *runtimeScheduler);
+    return std::make_unique<EventBeat>(ownerBox, *mRuntimeScheduler);
   };
 
   // 6. Scheduler
@@ -279,6 +279,15 @@ void DeviceInstanceManager::StartReactApp(const std::string &appName,
     auto buffer = std::make_shared<facebook::jsi::StringBuffer>(jsCode);
     mRuntime->evaluateJavaScript(buffer, "startApp.js");
     std::cout << "  -> React app started" << std::endl;
+
+    // Phase 2: Execute any pending tasks in RuntimeScheduler
+    // This should trigger React's render cycle
+    std::cout << "  -> Calling RuntimeScheduler.callExpiredTasks..."
+              << std::endl;
+    if (mRuntimeScheduler) {
+      mRuntimeScheduler->callExpiredTasks(*mRuntime);
+      std::cout << "  -> RuntimeScheduler tasks executed" << std::endl;
+    }
   } catch (const facebook::jsi::JSIException &e) {
     std::cerr << "ERROR: Failed to start React app: " << e.what() << std::endl;
   } catch (const std::exception &e) {
@@ -299,6 +308,17 @@ void DeviceInstanceManager::SimulateJSExecution(
   });
 
   RenderAppDemo(mountingManager);
+}
+
+// Event Loop Tick - called by DALi Timer
+void DeviceInstanceManager::TickEventLoop() {
+  if (mRuntimeScheduler && mRuntime) {
+    try {
+      mRuntimeScheduler->callExpiredTasks(*mRuntime);
+    } catch (const std::exception &e) {
+      std::cerr << "ERROR in TickEventLoop: " << e.what() << std::endl;
+    }
+  }
 }
 
 void DeviceInstanceManager::RenderAppDemo(

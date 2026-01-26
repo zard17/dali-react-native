@@ -26,6 +26,19 @@ void DaliRenderer::Init(Dali::Application &application) {
   mDeviceInstanceManager->StartSurface();
   mDeviceInstanceManager->StartReactApp("DaliRNApp", 1);
 
+  // Phase 3: Start event loop timer for continuous task processing
+  // ~60fps (16ms interval)
+  mEventLoopTimer = Dali::Timer::New(16);
+  mEventLoopTimer.TickSignal().Connect(this, &DaliRenderer::OnEventLoopTick);
+  mEventLoopTimer.Start();
+  std::cout << "Event loop timer started (16ms interval)" << std::endl;
+
   // Deprecated:
   // mDeviceInstanceManager->SimulateJSExecution(mMountingManager.get());
+}
+
+bool DaliRenderer::OnEventLoopTick() {
+  // Tick the RuntimeScheduler to process pending tasks
+  mDeviceInstanceManager->TickEventLoop();
+  return true; // Keep timer running
 }

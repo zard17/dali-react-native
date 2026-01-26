@@ -99,11 +99,38 @@ void TurboModuleRegistry::install(jsi::Runtime &runtime) {
             auto createTimer = jsi::Function::createFromHostFunction(
                 rt, jsi::PropNameID::forAscii(rt, "createTimer"), 4,
                 [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args,
-                   size_t) -> jsi::Value {
+                   size_t count) -> jsi::Value {
                   double id = args[0].getNumber();
                   double duration = args[1].getNumber();
                   std::cout << "  -> Timing.createTimer(id=" << id
                             << ", duration=" << duration << ")" << std::endl;
+
+                  // Phase 1: Immediate execution test
+                  // Args: [callbackID, duration, jsSchedulingTime, repeats]
+                  // The actual callback is invoked via
+                  // global.nativeFlushQueueImmediate For now, we'll try to
+                  // invoke it directly if it's the 3rd arg
+                  if (count > 2 && args[2].isNumber()) {
+                    double jsSchedulingTime = args[2].getNumber();
+                    std::cout << "  -> Attempting immediate callback execution "
+                                 "(jsSchedulingTime="
+                              << jsSchedulingTime << ")" << std::endl;
+
+                    // Try to get the global callback queue flusher
+                    auto global = rt.global();
+                    if (global.hasProperty(rt, "nativeFlushQueueImmediate")) {
+                      auto flusher = global.getPropertyAsFunction(
+                          rt, "nativeFlushQueueImmediate");
+                      // Call with the callback ID
+                      flusher.call(rt, jsi::Value(id));
+                      std::cout << "  -> Callback flushed!" << std::endl;
+                    } else {
+                      std::cout
+                          << "  -> Warning: nativeFlushQueueImmediate not found"
+                          << std::endl;
+                    }
+                  }
+
                   return jsi::Value::undefined();
                 });
             module.setProperty(rt, "createTimer", std::move(createTimer));

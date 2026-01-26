@@ -32,6 +32,9 @@ public:
   void LoadJSBundle(const std::string &bundlePath);
   void StartReactApp(const std::string &appName, int rootTag);
 
+  // Event Loop
+  void TickEventLoop();
+
   // Simulates the JS bridge sending mutations
   void SimulateJSExecution(class DaliMountingManager *mountingManager);
 
@@ -77,6 +80,7 @@ private:
   std::shared_ptr<facebook::jsi::Runtime> mRuntime;
   std::shared_ptr<facebook::react::Scheduler> mScheduler;
   std::shared_ptr<facebook::react::ContextContainer> mContextContainer;
+  std::shared_ptr<facebook::react::RuntimeScheduler> mRuntimeScheduler;
   std::optional<facebook::react::SurfaceHandler> mSurfaceHandler;
 
   // DALi
