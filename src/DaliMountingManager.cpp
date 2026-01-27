@@ -3,6 +3,8 @@
 #include "components/DaliTextComponent.h"
 #include "components/DaliViewComponent.h"
 #include <iostream>
+#include <react/renderer/components/text/ParagraphProps.h>
+#include <react/renderer/components/view/ViewProps.h>
 
 using namespace facebook::react;
 
@@ -189,23 +191,19 @@ Dali::Actor DaliMountingManager::CreateActor(int tag,
 void DaliMountingManager::UpdateProps(
     Dali::Actor actor, std::string componentName,
     facebook::react::Props::Shared const &props) {
-  // TODO: Extract props from Shared Props object
-  // For now, hardcode some colors or rely on existing ApplyProps via string if
-  // we can serialize But we don't have serializer. Let's just set random color
-  // for View to visualize? Or try to cast Props to ViewProps if possible?
 
-  // Simplest visualization:
-  // If View, set background color (random or fixed) so we see it.
-  if (componentName == "View") {
-    // cast to ViewProps?
-    // #include <react/renderer/components/view/ViewProps.h> needed
-    // For now, just setting a color for debugging
-    // actor.SetProperty(Dali::Actor::Property::COLOR, Dali::Vector4(1.0f, 0.0f,
-    // 0.0f, 1.0f));
+  if (!props) {
+    return;
   }
 
-  // However, existing component classes take Strings.
-  // We should refactor them later.
+  // Handle View components
+  if (componentName == "View") {
+    // TODO: Extract and apply background color from ViewProps
+    // For now, background is set in main.cpp (white)
+  }
+
+  // Note: Text content comes from shadow view state, handled in Create/Update
+  // mutations
 }
 
 void DaliMountingManager::UpdateLayout(
