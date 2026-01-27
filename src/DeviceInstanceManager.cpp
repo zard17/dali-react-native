@@ -134,7 +134,10 @@ void DeviceInstanceManager::Initialize() {
 void DeviceInstanceManager::StartSurface() {
   std::cout << "Starting React Native Surface..." << std::endl;
 
-  // Start Workaround Thread
+  // Start Workaround Thread - REMOVED for Thread Safety
+  // DALi APIs must be called on Main Thread. We now rely on DaliRenderer's
+  // Timer.
+  /*
   if (!mWorkaroundRunning) {
     mWorkaroundRunning = true;
     mWorkaroundThread = std::thread([this]() {
@@ -146,13 +149,14 @@ void DeviceInstanceManager::StartSurface() {
       std::cout << "Workaround Thread Stopped" << std::endl;
     });
   }
+  */
 
   if (mSurfaceHandler) {
     if (mSurfaceHandler->getStatus() == SurfaceHandler::Status::Registered) {
       mSurfaceHandler->start();
-      const auto &mountingCoordinator =
-          mSurfaceHandler->getMountingCoordinator();
-      // Ideally we trigger an initial render or wait for transaction
+      // const auto &mountingCoordinator =
+      // mSurfaceHandler->getMountingCoordinator(); Ideally we trigger an
+      // initial render or wait for transaction
       std::cout << "  -> Surface Started" << std::endl;
     }
   }
@@ -161,12 +165,14 @@ void DeviceInstanceManager::StartSurface() {
 void DeviceInstanceManager::StopSurface() {
   std::cout << "Stopping React Native Surface..." << std::endl;
 
+  /*
   if (mWorkaroundRunning) {
     mWorkaroundRunning = false;
     if (mWorkaroundThread.joinable()) {
       mWorkaroundThread.join();
     }
   }
+  */
 
   if (mSurfaceHandler &&
       mSurfaceHandler->getStatus() == SurfaceHandler::Status::Running) {
