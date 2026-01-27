@@ -4,8 +4,8 @@
 #include <memory>
 
 // Fabric Includes
-// Fabric Includes
 #include <ReactCommon/RuntimeExecutor.h>
+#include <atomic>
 #include <jsi/jsi.h>
 #include <optional>
 #include <react/renderer/componentregistry/ComponentDescriptorRegistry.h>
@@ -18,8 +18,10 @@
 #include <react/renderer/scheduler/SchedulerDelegate.h>
 #include <react/renderer/scheduler/SurfaceHandler.h>
 #include <react/utils/ContextContainer.h>
+#include <thread>
 
-class DeviceInstanceManager : public facebook::react::SchedulerDelegate {
+class DeviceInstanceManager : public facebook::react::SchedulerDelegate,
+                              public Dali::ConnectionTracker {
 public:
   DeviceInstanceManager();
   ~DeviceInstanceManager();
@@ -33,7 +35,7 @@ public:
   void StartReactApp(const std::string &appName, int rootTag);
 
   // Event Loop
-  void TickEventLoop();
+  bool TickEventLoop();
 
   // Simulates the JS bridge sending mutations
   void SimulateJSExecution(class DaliMountingManager *mountingManager);
@@ -85,4 +87,8 @@ private:
 
   // DALi
   class DaliMountingManager *mMountingManager = nullptr;
+
+  // Workaround Thread
+  std::thread mWorkaroundThread;
+  std::atomic<bool> mWorkaroundRunning{false};
 };

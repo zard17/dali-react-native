@@ -1,0 +1,129 @@
+window-impl.cpp: SetScreen(1783) > input Screen name is empty
+application-impl.cpp: OnInit(587) > Application::OnInit
+graphics-backend-impl.cpp: SetGraphicsBackend(55) > current state: UNSET
+graphics-backend-impl.cpp: SetGraphicsBackend(67) > Graphics backend set to: GLES
+graphics-backend-impl.cpp: SetGraphicsBackend(74) > changed state: FIXED
+application-impl.cpp: CompleteAdaptorAndWindowCreate(487) > default Window is created in standalone
+application-impl.cpp: CreateWindow(349) > Create Default Window
+window-impl.cpp: Initialize(147) > Window::Initialize, isUsePreLoader(0)
+window-impl.cpp: Initialize(204) > Window size is set with screen size(1512 x 982)
+application-impl.cpp: CreateWindow(401) > Main window created done
+application-impl.cpp: CreateAdaptor(411) > CreateAdaptor!
+egl-graphics-factory.cpp: CreateGraphicsFactory(91) > DALi Graphics Backend: GLES
+[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Initialize(142) > Adaptor::Initialize
+[0m[1;32mINFO:[21;24m DALI: egl-graphics-controller.cpp: InitializeGLES(207) > Initializing Graphics Controller Phase 1
+[0m[1;32mINFO:[21;24m DALI: core-impl.cpp: Core(138) > Core policy enum : 0xe
+[0m[1;32mINFO:[21;24m DALI: scene-impl.cpp: ChangedSurface(431) > Send Surface Rect Message, width[1512], height[982]
+[0m[1;32mINFO:[21;24m DALI: window-impl.cpp: OnAccessibilityDisabled(1260) > Window (0x153217e40), WinId (3096), Accessibility is disabled
+[0m[1;32mINFO:[21;24m DALI: window-impl.cpp: OnAdaptorSet(276) > mIsUsePreLoader flag (0)
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: OnWindowShown(1172) > Adaptor::OnWindowShown: Adaptor is not paused state.[0]
+[0m[1;32mINFO:[21;24m DALI: window-impl.cpp: Show(618) > Window (0x153217e40), WinId (3096), Show(): iconified = 0, visible = 1
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: UpdateDefaultFrameDurations(595) > Frame duration changed : 60.000000 fps, 1 frame per render
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: CombinedUpdateRenderController(178) > CombinedUpdateRenderController::CombinedUpdateRenderController
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Initialize(231) > Check and create dali system cache directory: /Users/youngsus/.cache/dali_common_caches/
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Initialize(250) > Check and create dali internal shader cache directory: /Users/youngsus/.cache/dali_common_caches/shader/internal/
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Initialize(259) > Check and create dali custom shader cache directory: /Users/youngsus/.cache/dali_common_caches/shader/custom/
+[0m[1;32mINFO:[21;24m DALI: GraphicsBackend = GLES
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(167) > Fail to read file : /Users/youngsus/.cache/dali_common_caches/gpu-environment-gles.conf
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(168) > errno [17] File exists
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Initialize(272) > Core::Initialize
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Initialize(275) > Adaptor::Initialize: Initialized
+[0m[1;32mINFO:[21;24m DALI: application-impl.cpp: CompleteAdaptorAndWindowCreate(491) > Standalone Application with standalone Adaptor
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: Initialize(207) > CombinedUpdateRenderController::Initialize
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(167) > Fail to read file : /Users/youngsus/.cache/dali_common_caches/gpu-environment-gles.conf
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(168) > errno [17] File exists
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: UpdateRenderThread(615) > BEGIN: DALI_RENDER_THREAD_INIT
+[0m[1;32mINFO:[21;24m DALI: egl-graphics-controller.cpp: Initialize(223) > Initializing Graphics Controller Phase 2
+[0m[1;32mINFO:[21;24m DALI: EGL Information
+            PartialUpdate  0
+            Vendor:        Google Inc. (Apple)
+            Version:       1.5 (ANGLE 2.1.7258 git hash: d9fc4a372074)
+            Client APIs:   OpenGL_ES
+            Extensions:    EGL_KHR_create_context EGL_KHR_get_all_proc_addresses EGL_ANGLE_create_context_webgl_compatibility EGL_CHROMIUM_create_context_bind_generates_resource EGL_EXT_pixel_format_float EGL_KHR_surfaceless_context EGL_ANGLE_display_texture_share_group EGL_ANGLE_display_semaphore_share_group EGL_ANGLE_create_context_client_arrays EGL_ANGLE_program_cache_control EGL_ANGLE_robust_resource_initialization EGL_ANGLE_iosurface_client_buffer EGL_ANGLE_create_context_extensions_enabled EGL_ANDROID_blob_cache EGL_ANDROID_recordable EGL_ANGLE_wait_until_work_scheduled EGL_ANGLE_create_context_backwards_compatible EGL_KHR_create_context_no_error EGL_KHR_reusable_sync EGL_ANGLE_memory_usage_report 
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: NotifyGraphicsInitialised(1317) > NotifyGraphicsInitialised
+[0m[1;32mINFO:[21;24m DALI: Using OpenGL es 3.0.
+[0m[1;32mINFO:[21;24m DALI: gles-context.cpp: InitializeGlState(225) > GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: 32
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: NotifyThreadInitialised(1310) > NotifyThreadInitialised
+[0m[1;32mINFO:[21;24m DALI: MaxTextureSize = 16384
+[0m[1;32mINFO:[21;24m DALI: Using OpenGL es 3.0.
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(167) > Fail to read file : /Users/youngsus/.cache/dali_common_caches/gpu-environment-gles.conf
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(168) > errno [17] File exists
+[0m[1;32mINFO:[21;24m DALI: IsAdvancedBlendEquationSupported = 0
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(167) > Fail to read file : /Users/youngsus/.cache/dali_common_caches/gpu-environment-gles.conf
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(168) > errno [17] File exists
+[0m[1;32mINFO:[21;24m DALI: IsMultisampledRenderToTextureSupported = 0
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(167) > Fail to read file : /Users/youngsus/.cache/dali_common_caches/gpu-environment-gles.conf
+[0m[1;91mERROR:[21;24m DALI: configuration-manager.cpp: RetrieveKeysFromConfigFile(168) > errno [17] File exists
+[0m[1;32mINFO:[21;24m DALI: ShaderLanguageVersion = 300
+[0m[1;32mINFO:[21;24m DALI: window-render-surface.cpp: CreateSurface(715) > WindowRenderSurface::CreateSurface: SurfaceId(1) WinId (3096), w = 1512 h = 982 angle = 0 screen rotation = 0
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: UpdateRenderThread(672) > END: DALI_RENDER_THREAD_INIT
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: Start(390) > Adaptor::Start: Started
+[0mDaliRenderer Constructed
+DaliRenderer Init called
+DeviceInstanceManager Created
+DeviceInstanceManager Initializing...
+  -> JS Runtime Initialized
+  -> Runtime Executor Created
+  -> Context Container Created
+  -> Component Providers Registered
+  -> RuntimeScheduler Created and Registered
+  -> Scheduler Created
+  -> UIManagerBinding Installed
+  -> SurfaceHandler Registered
+DaliMountingManager Created
+Loading JavaScript bundle: bundle.js
+  -> Global object set
+  -> Console polyfilled
+  -> Installing __turboModuleProxy...
+  -> __turboModuleProxy installed via JSI
+  -> TurboModuleRegistry installed via JSI
+  -> Native module config set
+  -> Bundle size: 1011570 bytes
+  -> Bundle executed successfully
+Starting React Native Surface...
+Workaround Thread Started
+JS LOG: Running "DaliRNApp" 
+  -> TurboModule requested: UIManager
+  -> UIManager module created
+  -> NativeDOMCxx.linkRootNode called
+  -> Surface Started
+Starting React app: DaliRNApp (rootTag: 1)
+JS LOG: JS: startApp called 
+JS LOG: JS: AppRegistry loaded 
+JS LOG: JS: Registered Apps: ["LogBox","DaliRNApp"] 
+JS LOG: JS: nativeFabricUIManager exists: [Value] 
+  -> Timing.createTimer(id=2, duration=0)
+JS LOG: App: Rendering... 
+  -> TurboModule requested (unknown): SoundManager
+  -> TurboModule requested (unknown): PlatformConstants
+Scheduler finished transaction! Mutations: 7
+Processing Transaction... Mutations: 7
+[1;32mINFO:[21;24m DALI: FontClient JoinFontThreads requested
+[0m[1;32mINFO:[21;24m DALI: FontClient JoinFontThreads request done
+[0m[1;32mINFO:[21;24m DALI: Check whether pre-initialized FontClient exist
+[0m[1;32mINFO:[21;24m DALI: Create standard FontClient
+[0mScheduler finished transaction but no transaction pulled
+JS LOG: App: Mounted! 
+  -> JSTimers.callTimers(2) executed via BatchedBridge
+JS LOG: Running "DaliRNApp" 
+JS LOG: JS: runApplication finished 
+  -> React app started
+  -> Calling RuntimeScheduler.callExpiredTasks...
+  -> RuntimeScheduler tasks executed
+[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: Start(219) > Wait thread context [0/1] initialized
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: Start(221) > Thread context [0] initialized done
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: CancelPreCompile(1300) > CancelPreCompile()
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: Start(237) > CombinedUpdateRenderController::Start
+[0m[1;32mINFO:[21;24m DALI: adaptor-impl.cpp: NotifySceneCreated(1268) > Adaptor::NotifySceneCreated: Adaptor is running
+[0m[1;32mINFO:[21;24m DALI: FontClient JoinFontThreads requested
+[0m[1;32mINFO:[21;24m DALI: FontClient JoinFontThreads request done
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: UpdateRenderThread(723) > ShaderPreCompiler[DISABLE] 
+[0m[1;32mINFO:[21;24m DALI: render-manager.cpp: InitializeScene(560) > InitializeScene 0x151f67f00
+[0m[1;32mINFO:[21;24m DALI: scene-graph-scene.cpp: SetSurfaceRect(194) > update surfce rect in scene-graph, from width[0], height[0], to width[1512], height[982]. Changed count [1]
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: UpdateRenderThread(1008) > DALI Rendering skip (upload only : 0, renderer added : 0)
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: UpdateRenderThread(1008) > DALI Rendering skip (upload only : 0, renderer added : 0)
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: UpdateRenderThread(1008) > DALI Rendering skip (upload only : 0, renderer added : 0)
+[0m[1;32mINFO:[21;24m DALI: combined-update-render-controller.cpp: UpdateRenderThread(1008) > DALI Rendering skip (upload only : 0, renderer added : 0)
+[0mSimulating Fake Touch on Tag: 1
+Event Dispatched: touchStart on Tag: 1 (No Callback Registered)
+Event Dispatched: touchEnd on Tag: 1 (No Callback Registered)

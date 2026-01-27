@@ -27,9 +27,8 @@ add_executable(dali-rn-demo
   src/DaliMountingManager.cpp
   src/TurboModuleRegistry.cpp
   src/UIManagerModule.cpp
+  src/DaliTextLayoutManager.cpp
   ${REACT_NATIVE_SOURCES}
-  src/components/DaliViewComponent.cpp
-  src/components/DaliTextComponent.cpp
   src/components/DaliViewComponent.cpp
   src/components/DaliTextComponent.cpp
   src/components/DaliImageComponent.cpp

@@ -2,6 +2,10 @@ import React from 'react';
 import { AppRegistry, View, Text } from 'react-native';
 
 const App = () => {
+    console.log('App: Rendering...');
+    React.useEffect(() => {
+        console.log('App: Mounted!');
+    }, []);
     return (
         <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
             <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'blue' }}>

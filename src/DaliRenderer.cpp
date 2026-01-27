@@ -1,6 +1,7 @@
 #include "DaliRenderer.h"
 #include "DaliMountingManager.h"
 #include "DeviceInstanceManager.h"
+#include <dali/dali.h>
 
 DaliRenderer::DaliRenderer() {
   std::cout << "DaliRenderer Constructed" << std::endl;
@@ -8,6 +9,12 @@ DaliRenderer::DaliRenderer() {
 
 DaliRenderer::~DaliRenderer() {
   std::cout << "DaliRenderer Destructed" << std::endl;
+}
+
+bool DaliRenderer::OnEventLoopTick() {
+  // Tick the RuntimeScheduler to process pending tasks
+  mDeviceInstanceManager->TickEventLoop();
+  return true; // Keep timer running
 }
 
 void DaliRenderer::Init(Dali::Application &application) {
@@ -27,18 +34,14 @@ void DaliRenderer::Init(Dali::Application &application) {
   mDeviceInstanceManager->StartReactApp("DaliRNApp", 1);
 
   // Phase 3: Start event loop timer for continuous task processing
-  // ~60fps (16ms interval)
-  mEventLoopTimer = Dali::Timer::New(16);
-  mEventLoopTimer.TickSignal().Connect(this, &DaliRenderer::OnEventLoopTick);
-  mEventLoopTimer.Start();
-  std::cout << "Event loop timer started (16ms interval)" << std::endl;
-
   // Deprecated:
   // mDeviceInstanceManager->SimulateJSExecution(mMountingManager.get());
-}
 
-bool DaliRenderer::OnEventLoopTick() {
-  // Tick the RuntimeScheduler to process pending tasks
-  mDeviceInstanceManager->TickEventLoop();
-  return true; // Keep timer running
+  // Start a timer to tick the event loop and keep the app running
+  mEventLoopTimer = Dali::Timer::New(16); // ~60fps
+  mEventLoopTimer.TickSignal().Connect(this, &DaliRenderer::OnEventLoopTick);
+  mEventLoopTimer.Start();
+
+  std::cout << "Event loop timer started - window will remain open"
+            << std::endl;
 }

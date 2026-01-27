@@ -1,5 +1,6 @@
 #include "DeviceInstanceManager.h"
 #include "DaliMountingManager.h"
+#include "DaliTextLayoutManager.h"
 #include "TurboModuleRegistry.h"
 #include <fstream>
 #include <iostream>
@@ -43,7 +44,13 @@ void DeviceInstanceManager::Initialize() {
 
   // 3. Initialize Context Container
   mContextContainer = std::make_shared<facebook::react::ContextContainer>();
-  std::cout << "  -> Context Container Created" << std::endl;
+  // Validate if Fabric uses "TextLayoutManager" string key or typed key
+  // Standard pattern: mContextContainer->insert("TextLayoutManager", ...);
+  mContextContainer->insert("TextLayoutManager",
+                            std::shared_ptr<facebook::react::TextLayoutManager>(
+                                new DaliTextLayoutManager(mContextContainer)));
+  std::cout << "  -> Context Container Created (with TextLayoutManager)"
+            << std::endl;
 
   // 4. Component Descriptor Provider Registry
   auto providerRegistry =
@@ -126,6 +133,20 @@ void DeviceInstanceManager::Initialize() {
 
 void DeviceInstanceManager::StartSurface() {
   std::cout << "Starting React Native Surface..." << std::endl;
+
+  // Start Workaround Thread
+  if (!mWorkaroundRunning) {
+    mWorkaroundRunning = true;
+    mWorkaroundThread = std::thread([this]() {
+      std::cout << "Workaround Thread Started" << std::endl;
+      while (mWorkaroundRunning) {
+        this->TickEventLoop();
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+      }
+      std::cout << "Workaround Thread Stopped" << std::endl;
+    });
+  }
+
   if (mSurfaceHandler) {
     if (mSurfaceHandler->getStatus() == SurfaceHandler::Status::Registered) {
       mSurfaceHandler->start();
@@ -139,6 +160,14 @@ void DeviceInstanceManager::StartSurface() {
 
 void DeviceInstanceManager::StopSurface() {
   std::cout << "Stopping React Native Surface..." << std::endl;
+
+  if (mWorkaroundRunning) {
+    mWorkaroundRunning = false;
+    if (mWorkaroundThread.joinable()) {
+      mWorkaroundThread.join();
+    }
+  }
+
   if (mSurfaceHandler &&
       mSurfaceHandler->getStatus() == SurfaceHandler::Status::Running) {
     mSurfaceHandler->stop();
@@ -161,7 +190,14 @@ void DeviceInstanceManager::schedulerDidFinishTransaction(
     // Correct API usage based on earlier inspection
     auto transaction = mountingCoordinator->pullTransaction();
     if (transaction.has_value()) {
+      auto &mutations = transaction.value().getMutations();
+      std::cout << "Scheduler finished transaction! Mutations: "
+                << mutations.size() << std::endl;
+
       mMountingManager->PerformTransaction(transaction.value());
+    } else {
+      std::cout << "Scheduler finished transaction but no transaction pulled"
+                << std::endl;
     }
   }
 }
@@ -207,11 +243,75 @@ void DeviceInstanceManager::LoadJSBundle(const std::string &bundlePath) {
   mRuntime->global().setProperty(*mRuntime, "global", mRuntime->global());
   std::cout << "  -> Global object set" << std::endl;
 
-  // Install TurboModuleRegistry via JSI (replaces JavaScript mock)
-  TurboModuleRegistry::install(*mRuntime);
+  // Polyfill console
+  auto console = facebook::jsi::Object(*mRuntime);
+  auto log = facebook::jsi::Function::createFromHostFunction(
+      *mRuntime, facebook::jsi::PropNameID::forAscii(*mRuntime, "log"), 1,
+      [](facebook::jsi::Runtime &rt, const facebook::jsi::Value &thisValue,
+         const facebook::jsi::Value *args,
+         size_t count) -> facebook::jsi::Value {
+        std::cout << "JS LOG: ";
+        for (size_t i = 0; i < count; ++i) {
+          if (args[i].isString()) {
+            std::cout << args[i].asString(rt).utf8(rt) << " ";
+          } else if (args[i].isNumber()) {
+            std::cout << args[i].getNumber() << " ";
+          } else if (args[i].isObject()) {
+            // Try JSON.stringify
+            try {
+              auto global = rt.global();
+              auto json = global.getPropertyAsObject(rt, "JSON");
+              auto stringify = json.getPropertyAsFunction(rt, "stringify");
+              auto result = stringify.call(rt, args[i]);
+              if (result.isString()) {
+                std::cout << result.asString(rt).utf8(rt) << " ";
+              } else {
+                std::cout << "[Object] ";
+              }
+            } catch (...) {
+              std::cout << "[Object (Circular/Error)] ";
+            }
+          } else {
+            std::cout << "[Value] ";
+          }
+        }
+        std::cout << std::endl;
+        return facebook::jsi::Value::undefined();
+      });
+  console.setProperty(*mRuntime, "log", std::move(log));
 
-  // Provide minimal native module configuration
-  // This prevents the __fbBatchedBridgeConfig error
+  auto error = facebook::jsi::Function::createFromHostFunction(
+      *mRuntime, facebook::jsi::PropNameID::forAscii(*mRuntime, "error"), 1,
+      [](facebook::jsi::Runtime &rt, const facebook::jsi::Value &thisValue,
+         const facebook::jsi::Value *args,
+         size_t count) -> facebook::jsi::Value {
+        std::cerr << "JS ERROR: ";
+        for (size_t i = 0; i < count; ++i) {
+          if (args[i].isString()) {
+            std::cerr << args[i].asString(rt).utf8(rt) << " ";
+          } else if (args[i].isNumber()) {
+            std::cerr << args[i].getNumber() << " ";
+          } else {
+            std::cerr << "[Object] ";
+          }
+        }
+        std::cerr << std::endl;
+        return facebook::jsi::Value::undefined();
+      });
+  console.setProperty(*mRuntime, "error", std::move(error));
+  console.setProperty(
+      *mRuntime, "warn",
+      console.getProperty(*mRuntime, "log")); // Alias warn to log
+
+  mRuntime->global().setProperty(*mRuntime, "console", std::move(console));
+  std::cout << "  -> Console polyfilled" << std::endl;
+
+  // 5. Install TurboModuleRegistry
+  // This mocks the native module infrastructure
+  TurboModuleRegistry::install(*mRuntime, mRuntimeScheduler);
+  std::cout << "  -> TurboModuleRegistry installed via JSI" << std::endl;
+
+  // 6. Schedulerevents the __fbBatchedBridgeConfig error
   const char *nativeModuleConfig =
       "global.__fbBatchedBridgeConfig = { remoteModuleConfig: [], "
       "localModulesConfig: [] };";
@@ -257,16 +357,29 @@ void DeviceInstanceManager::StartReactApp(const std::string &appName,
     // Execute: AppRegistry.runApplication('appName', { rootTag: rootTag })
     // AppRegistry is now exposed globally in index.js
     std::string jsCode =
-        "try { "
-        "  AppRegistry.runApplication('" +
+        "const startApp = () => {"
+        "  try {"
+        "    console.log('JS: startApp called');"
+        "    const AppRegistry = global.AppRegistry;"
+        "    if (!AppRegistry) throw new Error('AppRegistry not found on "
+        "global');"
+        "    console.log('JS: AppRegistry loaded');"
+        "    console.log('JS: Registered Apps:', AppRegistry.getAppKeys());"
+        "    console.log('JS: nativeFabricUIManager exists:', "
+        "!!global.nativeFabricUIManager);"
+        "    setTimeout(() => console.log('JS: TEST TIMEOUT 0ms EXECUTED'), "
+        "0); "
+        "    AppRegistry.runApplication('" +
         appName +
-        "', { "
+        "', {"
+        "    initialProps: {}, "
         "    rootTag: " +
         std::to_string(rootTag) +
         ", "
-        "    initialProps: { concurrentRoot: true }, "
-        "    fabric: true "
+        "    fabric: true, "
+        "    concurrentRoot: true "
         "  }); "
+        "  console.log('JS: runApplication finished');"
         "} catch (e) { "
         "  console.error('Failed to run app:', e); "
         "  if (global.TurboModuleRegistry && "
@@ -275,7 +388,8 @@ void DeviceInstanceManager::StartReactApp(const std::string &appName,
         "global.TurboModuleRegistry.getEnforcing('ExceptionsManager')."
         "reportFatalException(e.error ? e.error.message : e.message, [], 0); "
         "  } "
-        "}";
+        "} "
+        "}; startApp();";
     auto buffer = std::make_shared<facebook::jsi::StringBuffer>(jsCode);
     mRuntime->evaluateJavaScript(buffer, "startApp.js");
     std::cout << "  -> React app started" << std::endl;
@@ -310,15 +424,17 @@ void DeviceInstanceManager::SimulateJSExecution(
   RenderAppDemo(mountingManager);
 }
 
-// Event Loop Tick - called by DALi Timer
-void DeviceInstanceManager::TickEventLoop() {
-  if (mRuntimeScheduler && mRuntime) {
-    try {
+// Event Loop Tick - called by DALi Timer (or workaround thread)
+bool DeviceInstanceManager::TickEventLoop() {
+  try {
+    if (mRuntimeScheduler &&
+        mRuntime) { // Keep mRuntime check as it was originally
       mRuntimeScheduler->callExpiredTasks(*mRuntime);
-    } catch (const std::exception &e) {
-      std::cerr << "ERROR in TickEventLoop: " << e.what() << std::endl;
     }
+  } catch (const facebook::jsi::JSIException &e) {
+    std::cerr << "ERROR in TickEventLoop: " << e.what() << std::endl;
   }
+  return true;
 }
 
 void DeviceInstanceManager::RenderAppDemo(
