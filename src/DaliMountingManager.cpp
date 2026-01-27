@@ -4,8 +4,10 @@
 #include "components/DaliViewComponent.h"
 #include <iostream>
 #include <react/renderer/components/text/ParagraphProps.h>
+#include <react/renderer/components/text/ParagraphState.h>
 #include <react/renderer/components/view/ViewProps.h>
-
+#include <react/renderer/core/ConcreteState.h>
+#include <react/renderer/graphics/Color.h>
 using namespace facebook::react;
 
 DaliMountingManager::DaliMountingManager() {
@@ -43,6 +45,9 @@ void DaliMountingManager::ProcessMutation(
     std::string componentName =
         view.componentName ? view.componentName : "View";
 
+    std::cout << "  -> Create: Tag=" << tag << " Component=" << componentName
+              << " HasState=" << (view.state ? "yes" : "no") << std::endl;
+
     // Create Actor
     auto actor = CreateActor(tag, componentName);
     if (actor) {
@@ -56,6 +61,61 @@ void DaliMountingManager::ProcessMutation(
       }
       UpdateProps(actor, componentName, view.props);
       UpdateLayout(actor, view.layoutMetrics);
+
+      // Extract text from ParagraphState for text components
+      if (componentName == "Paragraph" && view.state) {
+        // Cast State::Shared to ConcreteState<ParagraphState>
+        auto concreteState =
+            std::dynamic_pointer_cast<const ConcreteState<ParagraphState>>(
+                view.state);
+        if (concreteState) {
+          auto &paragraphState = concreteState->getData();
+          auto &attributedString = paragraphState.attributedString;
+          auto &fragments = attributedString.getFragments();
+          std::string fullText = "";
+          for (const auto &fragment : fragments) {
+            fullText += fragment.string;
+          }
+
+          // Apply text to TextLabel
+          auto textLabel = Dali::Toolkit::TextLabel::DownCast(actor);
+          if (textLabel && !fullText.empty()) {
+            textLabel.SetProperty(Dali::Toolkit::TextLabel::Property::TEXT,
+                                  fullText);
+            textLabel.SetProperty(
+                Dali::Toolkit::TextLabel::Property::TEXT_COLOR,
+                Dali::Color::BLACK);
+
+            // Always set a visible default point size
+            textLabel.SetProperty(
+                Dali::Toolkit::TextLabel::Property::POINT_SIZE, 24.0f);
+
+            std::cout << "  -> Text set: \"" << fullText << "\"" << std::endl;
+
+            // Apply text color from first fragment if available
+            if (!fragments.empty()) {
+              auto &textAttributes = fragments[0].textAttributes;
+              if (textAttributes.foregroundColor) {
+                auto colorComponents =
+                    colorComponentsFromColor(textAttributes.foregroundColor);
+                textLabel.SetProperty(
+                    Dali::Toolkit::TextLabel::Property::TEXT_COLOR,
+                    Dali::Vector4(colorComponents.red, colorComponents.green,
+                                  colorComponents.blue, colorComponents.alpha));
+              }
+              // Apply font size from React Native if available
+              if (!std::isnan(textAttributes.fontSize) &&
+                  textAttributes.fontSize > 0) {
+                textLabel.SetProperty(
+                    Dali::Toolkit::TextLabel::Property::POINT_SIZE,
+                    textAttributes.fontSize);
+                std::cout << "  -> Font size: " << textAttributes.fontSize
+                          << std::endl;
+              }
+            }
+          }
+        }
+      }
 
       // If this is the root view (tag 1), add it to the window
       if (tag == 1 && mWindow) {
@@ -87,14 +147,25 @@ void DaliMountingManager::ProcessMutation(
     auto childTag = mutation.newChildShadowView.tag;
     // auto index = mutation.index; // Not used in current Dali::Actor::Add
 
+    std::cout << "  -> Insert: Child=" << childTag
+              << " into Parent=" << parentTag << std::endl;
+
     auto parentIt = mActorRegistry.find(parentTag);
     auto childIt = mActorRegistry.find(childTag);
 
     if (parentIt != mActorRegistry.end() && childIt != mActorRegistry.end()) {
       parentIt->second.Add(childIt->second);
+      std::cout << "  -> Inserted successfully" << std::endl;
     } else {
       std::cout << "Warning: Parent(" << parentTag << ") or Child(" << childTag
                 << ") not found for Insert" << std::endl;
+
+      // Special case: if parent not found but we have the child, add to window
+      if (childIt != mActorRegistry.end() && mWindow) {
+        mWindow.Add(childIt->second);
+        std::cout << "  -> Added orphan child " << childTag << " to window"
+                  << std::endl;
+      }
     }
     break;
   }
@@ -123,8 +194,19 @@ void DaliMountingManager::ProcessMutation(
         // If this is the root view (tag 1), add it to the window
         if (tag == 1 && mWindow) {
           mWindow.Add(actor);
-          std::cout << "  -> Root actor (tag 1) created and added to window"
-                    << std::endl;
+          // Set root actor size to window size
+          Dali::Window::WindowSize winSize = mWindow.GetSize();
+          actor.SetProperty(
+              Dali::Actor::Property::SIZE,
+              Dali::Vector2(winSize.GetWidth(), winSize.GetHeight()));
+          actor.SetProperty(Dali::Actor::Property::ANCHOR_POINT,
+                            Dali::AnchorPoint::TOP_LEFT);
+          actor.SetProperty(Dali::Actor::Property::PARENT_ORIGIN,
+                            Dali::ParentOrigin::TOP_LEFT);
+          std::cout
+              << "  -> Root actor (tag 1) created and added to window (size: "
+              << winSize.GetWidth() << "x" << winSize.GetHeight() << ")"
+              << std::endl;
         }
       }
       it = mActorRegistry.find(tag);
@@ -210,6 +292,11 @@ void DaliMountingManager::UpdateLayout(
     Dali::Actor actor, facebook::react::LayoutMetrics const &layoutMetrics) {
   // DALi uses Top-Left origin usually. Fabric uses Frame (x, y, w, h).
   auto frame = layoutMetrics.frame;
+
+  std::cout << "  -> Layout: x=" << frame.origin.x << " y=" << frame.origin.y
+            << " w=" << frame.size.width << " h=" << frame.size.height
+            << std::endl;
+
   actor.SetProperty(Dali::Actor::Property::POSITION,
                     Dali::Vector3(frame.origin.x, frame.origin.y, 0));
   actor.SetProperty(Dali::Actor::Property::SIZE,
