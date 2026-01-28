@@ -56,7 +56,10 @@ graph TD
     *   `DaliViewComponent` -> `Dali::Toolkit::Control`
     *   `DaliTextComponent` -> `Dali::Toolkit::TextLabel`
     *   `DaliImageComponent` -> `Dali::Toolkit::ImageView`
-*   **Props Handling**: Parses the `folly::dynamic` (or raw string in prototype) props from React and applies them as DALi Properties (e.g., `BackgroundColor`, `Text`, `ImageURL`).
+*   **Props Handling**: 
+    *   View: Background color from ViewProps
+    *   Text: Extracts content from ParagraphState, styling from TextProps
+    *   Image: Extracts source URI from ImageState (resolved by React Native)
 
 ### 4. JS Runtime (JavaScriptCore)
 *   We use the **system-provided JavaScriptCore** framework on macOS.

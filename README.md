@@ -31,6 +31,8 @@ It demonstrates how to bridge React Native's C++ core (Fabric) with the DALi Sce
     - `DeviceInstanceManager`: Manages the JS Runtime (JSC), Fabric Scheduler, and surface lifecycle.
     - `components/`: DALi-specific component implementations (`DaliViewComponent`, `DaliTextComponent`, `DaliImageComponent`).
 - `third_party_dependencies/`: Directory where manual dependencies are built.
+- `native-benchmark/`: Pure C++ DALi app for memory comparison.
+- `docs/`: Documentation including memory comparison analysis.
 - `node_modules/`: React Native sources.
 - `cmake/`: CMake helper modules.
 - `index.js`: React Native application entry point.
@@ -80,6 +82,17 @@ The renderer follows this flow:
 4. **DALi Actors** are created and managed in the scene graph
 5. **Dali::Timer** drives the event loop on the main thread
 
+## Memory Benchmark
+
+The React Native overhead compared to pure C++ DALi is minimal:
+
+| Metric | Native C++ | React Native | Overhead |
+|--------|------------|--------------|----------|
+| Physical Footprint | 133.8 MB | 142.7 MB | **+6.7%** |
+| RSS | 155 MB | 174 MB | +12.3% |
+
+See [docs/memory_comparison.md](docs/memory_comparison.md) for detailed analysis.
+
 ## Current Status
 
 - ✅ Real JS bundle execution via JavaScriptCore
@@ -87,7 +100,7 @@ The renderer follows this flow:
 - ✅ Text rendering with font size and color extraction
 - ✅ Thread-safe DALi API usage (main thread only)
 - ✅ View and Text component mapping
-- ⬜ Image component (placeholder implementation)
+- ✅ Image component with local file support
 - ⬜ Touch/gesture handling
 - ⬜ Full Tizen deployment
 
