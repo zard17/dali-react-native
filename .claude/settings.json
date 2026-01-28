@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./build/dali-rn-demo *)",
+      "Bash(./native-benchmark/build/*)",
+      "Bash(npx react-native bundle *)",
+      "Bash(pkill *)",
+      "Bash(sleep *)"
+    ]
+  }
+}

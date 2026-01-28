@@ -13,25 +13,22 @@
   - Check how `layoutMetrics.frame` is being applied to DALi actors
   - Verify Yoga is calculating correct positions for centered layouts
 
-### 2. Parent-child insertion hierarchy ✓ UNDERSTOOD
+### 2. Parent-child insertion hierarchy - INVESTIGATION IN PROGRESS
 - **Issue**: All children are inserted into root (tag 1) instead of their actual parent container
-- **Root cause**: React Native Fabric's **view flattening optimization**
+- **Observed cause**: React Native Fabric's **view flattening optimization**
   - Fabric automatically flattens Views that don't have "important" properties
   - Views with only backgroundColor, position styles are considered collapsible
-  - This is intentional optimization, not a bug in DaliMountingManager
-- **Solution**: Use `collapsable={false}` on View components that must maintain hierarchy
-  ```jsx
-  <View style={{...}} collapsable={false}>
-    <View style={{...}} collapsable={false}>
-      {/* children */}
-    </View>
-  </View>
-  ```
-- **Verified**: With `collapsable={false}`, Insert mutations show correct parent tags:
-  - `Insert: Child=4 into Parent=6` (nested correctly)
-  - `Insert: Child=6 into Parent=8` (nested correctly)
-  - `Insert: Child=8 into Parent=1` (root attachment)
-- **Alternative**: Consider implementing NativeComponent that marks views as non-collapsible by default
+- **Workaround**: Use `collapsable={false}` on View components that must maintain hierarchy
+- **Verified**: With `collapsable={false}`, Insert mutations show correct parent tags
+
+#### Open Question: Why does view flattening cause visual issues?
+- In theory, view flattening should be **transparent** - same visual result, better performance
+- Yoga should recalculate child positions to be absolute (relative to new parent)
+- **Need to investigate**: Compare layout metrics WITH vs WITHOUT `collapsable={false}`
+  - WITH collapsable={false}: Text at (100, 80) relative to parent at (50, 50) → visual (150, 130)
+  - WITHOUT: If positions aren't adjusted, Text would appear at (100, 80) instead of (150, 130)
+- **Hypothesis**: Either Yoga isn't adjusting positions, or our DALi implementation needs to handle this
+- **Next step**: Run app without collapsable, capture layout metrics, compare positions
 
 ### 3. Container with `flex: 1` has width=0
 - **Issue**: When using `flex: 1` style, the container gets `width: 0` in layout metrics
