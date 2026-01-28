@@ -41,6 +41,7 @@ public:
   void SimulateJSExecution(class DaliMountingManager *mountingManager);
 
   void SetMountingManager(class DaliMountingManager *mountingManager);
+  void SetWindowSize(int width, int height);
 
   // SchedulerDelegate
   void schedulerDidFinishTransaction(
@@ -87,6 +88,8 @@ private:
 
   // DALi
   class DaliMountingManager *mMountingManager = nullptr;
+  int mWindowWidth = 1512;   // Default, will be set dynamically
+  int mWindowHeight = 982;
 
   // Workaround Thread
   std::thread mWorkaroundThread;

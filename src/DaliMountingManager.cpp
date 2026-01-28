@@ -406,13 +406,9 @@ void DaliMountingManager::UpdateLayout(
   // Testing with small negative offset first
   auto frame = layoutMetrics.frame;
 
-  // WORKAROUND: DALi Mac/ANGLE bug - Y positions < 200 don't render with TOP_LEFT
-  // Solution: Add Y offset to all positions, compensated by root layer shift in DaliRenderer
-  // See: DaliRenderer.cpp where root layer is shifted by -DALI_MAC_Y_OFFSET
-  static const float DALI_MAC_Y_OFFSET = 200.0f;
-
+  // Direct coordinate mapping - no offset needed with correct window size
   float finalX = frame.origin.x;
-  float finalY = frame.origin.y + DALI_MAC_Y_OFFSET;
+  float finalY = frame.origin.y;
 
   std::cout << "  -> Layout: RN(" << frame.origin.x << "," << frame.origin.y
             << ") -> DALi(" << finalX << "," << finalY << ")"

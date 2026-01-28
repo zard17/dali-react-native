@@ -15,25 +15,27 @@ DaliRenderer::~DaliRenderer() {
 void DaliRenderer::Init(Dali::Application &application) {
   std::cout << "DaliRenderer Init called" << std::endl;
 
+  // Get window first to determine actual size
+  Dali::Window window = application.GetWindow();
+  Dali::Window::WindowSize winSize = window.GetSize();
+  int windowWidth = winSize.GetWidth();
+  int windowHeight = winSize.GetHeight();
+  std::cout << "  -> Actual window size: " << windowWidth << "x" << windowHeight << std::endl;
+
+  // Initialize DeviceInstanceManager with correct window size
   mDeviceInstanceManager = std::make_unique<DeviceInstanceManager>();
+  mDeviceInstanceManager->SetWindowSize(windowWidth, windowHeight);
   mDeviceInstanceManager->Initialize();
 
   mMountingManager = std::make_unique<DaliMountingManager>();
   mDeviceInstanceManager->SetMountingManager(mMountingManager.get());
-
-  Dali::Window window = application.GetWindow();
   mMountingManager->SetWindow(window);
 
   // Disable depth test for proper 2D rendering order (painter's algorithm)
   // This ensures actors render in add-order, not by depth
   window.GetRootLayer().SetProperty(Dali::Layer::Property::DEPTH_TEST, false);
 
-  // WORKAROUND: DALi Mac/ANGLE bug - Y positions < 200 don't render with TOP_LEFT
-  // Shift root layer up to compensate for Y offset applied in DaliMountingManager
-  static const float DALI_MAC_Y_OFFSET = 200.0f;
-  Dali::Layer rootLayer = window.GetRootLayer();
-  rootLayer.SetProperty(Dali::Actor::Property::POSITION, Dali::Vector3(0.0f, -DALI_MAC_Y_OFFSET, 0.0f));
-  std::cout << "  -> Mac/ANGLE workaround: Root layer shifted by -" << DALI_MAC_Y_OFFSET << std::endl;
+  std::cout << "  -> Using direct TOP_LEFT coordinate mapping" << std::endl;
 
   // Load JavaScript bundle and start React app
   mDeviceInstanceManager->LoadJSBundle("bundle.js");

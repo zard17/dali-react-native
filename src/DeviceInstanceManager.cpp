@@ -139,8 +139,10 @@ void DeviceInstanceManager::Initialize() {
   // Otherwise Yoga may calculate root width/height as 0 for flex:1 layouts
   LayoutConstraints layoutConstraints;
   layoutConstraints.layoutDirection = LayoutDirection::LeftToRight;
-  layoutConstraints.minimumSize = Size{1920, 1080};  // Force exact size
-  layoutConstraints.maximumSize = Size{1920, 1080};
+  // Use actual window size (set dynamically via SetWindowSize)
+  layoutConstraints.minimumSize = Size{static_cast<float>(mWindowWidth), static_cast<float>(mWindowHeight)};
+  layoutConstraints.maximumSize = Size{static_cast<float>(mWindowWidth), static_cast<float>(mWindowHeight)};
+  std::cout << "  -> Layout constraints: " << mWindowWidth << "x" << mWindowHeight << std::endl;
 
   LayoutContext layoutContext;
   layoutContext.pointScaleFactor = 1.0f;
@@ -210,6 +212,12 @@ void DeviceInstanceManager::StopSurface() {
 void DeviceInstanceManager::SetMountingManager(
     DaliMountingManager *mountingManager) {
   mMountingManager = mountingManager;
+}
+
+void DeviceInstanceManager::SetWindowSize(int width, int height) {
+  mWindowWidth = width;
+  mWindowHeight = height;
+  std::cout << "  -> Window size set to: " << width << "x" << height << std::endl;
 }
 
 // Scheduler Delegate Implementation

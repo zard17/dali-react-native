@@ -83,8 +83,9 @@ void TurboModuleRegistry::install(
                   auto dims = jsi::Object(rt);
 
                   auto window = jsi::Object(rt);
-                  window.setProperty(rt, "width", 1920);
-                  window.setProperty(rt, "height", 1080);
+                  // Use actual window size (1512x982 on Retina Mac)
+                  window.setProperty(rt, "width", 1512);
+                  window.setProperty(rt, "height", 982);
                   window.setProperty(rt, "scale", 1);
                   window.setProperty(rt, "fontScale", 1);
 
