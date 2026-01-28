@@ -4,11 +4,11 @@
 Dali::Toolkit::ImageView DaliImageComponent::New() {
   // Default image or placeholder
   auto imageView = Dali::Toolkit::ImageView::New();
-  // Use CENTER/CENTER to avoid TOP_LEFT rendering bug
+  // Use TOP_LEFT/TOP_LEFT to test Y-axis direction
   imageView.SetProperty(Dali::Actor::Property::ANCHOR_POINT,
-                        Dali::AnchorPoint::CENTER);
+                        Dali::AnchorPoint::TOP_LEFT);
   imageView.SetProperty(Dali::Actor::Property::PARENT_ORIGIN,
-                        Dali::ParentOrigin::CENTER);
+                        Dali::ParentOrigin::TOP_LEFT);
   return imageView;
 }
 

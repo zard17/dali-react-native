@@ -3,11 +3,11 @@
 
 Dali::Toolkit::TextLabel DaliTextComponent::New() {
   auto textLabel = Dali::Toolkit::TextLabel::New("Hello World");
-  // Use CENTER/CENTER to avoid TOP_LEFT rendering bug
+  // Use TOP_LEFT/TOP_LEFT to test Y-axis direction
   textLabel.SetProperty(Dali::Actor::Property::ANCHOR_POINT,
-                        Dali::AnchorPoint::CENTER);
+                        Dali::AnchorPoint::TOP_LEFT);
   textLabel.SetProperty(Dali::Actor::Property::PARENT_ORIGIN,
-                        Dali::ParentOrigin::CENTER);
+                        Dali::ParentOrigin::TOP_LEFT);
   return textLabel;
 }
 

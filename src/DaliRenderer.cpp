@@ -34,15 +34,12 @@ void DaliRenderer::Init(Dali::Application &application) {
   defaultTask.SetCullMode(false);
   std::cout << "  -> Frustum culling disabled on default render task" << std::endl;
 
-  // Create a custom offset layer using CENTER/CENTER
-  // This layer will contain all actors and use its center as the origin
-  Dali::Layer offsetLayer = Dali::Layer::New();
-  offsetLayer.SetProperty(Dali::Actor::Property::PARENT_ORIGIN, Dali::ParentOrigin::CENTER);
-  offsetLayer.SetProperty(Dali::Actor::Property::ANCHOR_POINT, Dali::AnchorPoint::CENTER);
-  offsetLayer.SetProperty(Dali::Actor::Property::SIZE, Dali::Vector2(1920.0f, 1080.0f));
-  offsetLayer.SetProperty(Dali::Actor::Property::POSITION, Dali::Vector3(0.0f, 0.0f, 0.0f));
-  window.Add(offsetLayer);
-  std::cout << "  -> Custom offset layer created with CENTER/CENTER" << std::endl;
+  // WORKAROUND: DALi Mac/ANGLE bug - Y positions < 200 don't render with TOP_LEFT
+  // Shift root layer up to compensate for Y offset applied in DaliMountingManager
+  static const float DALI_MAC_Y_OFFSET = 200.0f;
+  Dali::Layer rootLayer = window.GetRootLayer();
+  rootLayer.SetProperty(Dali::Actor::Property::POSITION, Dali::Vector3(0.0f, -DALI_MAC_Y_OFFSET, 0.0f));
+  std::cout << "  -> Mac/ANGLE workaround: Root layer shifted by -" << DALI_MAC_Y_OFFSET << std::endl;
 
   // Load JavaScript bundle and start React app
   mDeviceInstanceManager->LoadJSBundle("bundle.js");

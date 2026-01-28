@@ -278,11 +278,11 @@ void DaliMountingManager::ProcessMutation(
         if (tag == 1 && mWindow) {
           mWindow.Add(actor);
 
-          // Use CENTER/CENTER for root
+          // Use TOP_LEFT/TOP_LEFT for root
           actor.SetProperty(Dali::Actor::Property::ANCHOR_POINT,
-                            Dali::AnchorPoint::CENTER);
+                            Dali::AnchorPoint::TOP_LEFT);
           actor.SetProperty(Dali::Actor::Property::PARENT_ORIGIN,
-                            Dali::ParentOrigin::CENTER);
+                            Dali::ParentOrigin::TOP_LEFT);
           actor.SetResizePolicy(Dali::ResizePolicy::FILL_TO_PARENT,
                                 Dali::Dimension::ALL_DIMENSIONS);
           actor.SetProperty(Dali::Actor::Property::POSITION, Dali::Vector3(0, 0, 0));
@@ -406,13 +406,13 @@ void DaliMountingManager::UpdateLayout(
   // Testing with small negative offset first
   auto frame = layoutMetrics.frame;
 
-  // CENTER/CENTER: position actor center relative to parent center
-  // RN top-left (x,y) with size (w,h) -> actor center at (x+w/2, y+h/2)
-  // DALi position = actor_center - parent_center = (x+w/2-960, y+h/2-540)
-  float actorCenterX = frame.origin.x + frame.size.width / 2.0f;
-  float actorCenterY = frame.origin.y + frame.size.height / 2.0f;
-  float finalX = actorCenterX - 960.0f;
-  float finalY = actorCenterY - 540.0f;
+  // WORKAROUND: DALi Mac/ANGLE bug - Y positions < 200 don't render with TOP_LEFT
+  // Solution: Add Y offset to all positions, compensated by root layer shift in DaliRenderer
+  // See: DaliRenderer.cpp where root layer is shifted by -DALI_MAC_Y_OFFSET
+  static const float DALI_MAC_Y_OFFSET = 200.0f;
+
+  float finalX = frame.origin.x;
+  float finalY = frame.origin.y + DALI_MAC_Y_OFFSET;
 
   std::cout << "  -> Layout: RN(" << frame.origin.x << "," << frame.origin.y
             << ") -> DALi(" << finalX << "," << finalY << ")"
