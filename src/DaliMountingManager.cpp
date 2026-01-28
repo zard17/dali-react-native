@@ -317,12 +317,38 @@ void DaliMountingManager::UpdateProps(
 
   // Handle View components
   if (componentName == "View") {
-    // TODO: Extract and apply background color from ViewProps
-    // For now, background is set in main.cpp (white)
+    auto viewProps = std::dynamic_pointer_cast<const ViewProps>(props);
+    if (viewProps) {
+      // Extract backgroundColor from ViewProps
+      auto bgColor = viewProps->backgroundColor;
+      if (bgColor) {
+        auto colorComponents = colorComponentsFromColor(bgColor);
+        auto control = Dali::Toolkit::Control::DownCast(actor);
+        if (control) {
+          control.SetBackgroundColor(
+              Dali::Vector4(colorComponents.red, colorComponents.green,
+                            colorComponents.blue, colorComponents.alpha));
+          std::cout << "  -> View backgroundColor set: rgba("
+                    << colorComponents.red << ", " << colorComponents.green
+                    << ", " << colorComponents.blue << ", "
+                    << colorComponents.alpha << ")" << std::endl;
+        }
+      }
+    }
+  } else if (componentName == "Image") {
+    auto imageProps = std::dynamic_pointer_cast<const ImageProps>(props);
+    if (imageProps && !imageProps->sources.empty()) {
+      std::string uri = imageProps->sources[0].uri;
+      if (!uri.empty()) {
+        auto imageView = Dali::Toolkit::ImageView::DownCast(actor);
+        if (imageView) {
+          imageView.SetImage(uri);
+          std::cout << "  -> UpdateProps: Image URL set to: " << uri
+                    << std::endl;
+        }
+      }
+    }
   }
-
-  // Note: Text content comes from shadow view state, handled in Create/Update
-  // mutations
 }
 
 void DaliMountingManager::UpdateLayout(

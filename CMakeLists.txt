@@ -73,3 +73,33 @@ target_include_directories(dali-rn-demo PRIVATE
   # ${React_ThirdParty_INCLUDE_DIRS}
   # ${Hermes_INCLUDE_DIRS}
 )
+
+# Native Benchmark App (Images)
+add_executable(native-benchmark-images
+  native-benchmark/image-test/main.cpp
+)
+
+target_link_libraries(native-benchmark-images
+  PRIVATE
+  PkgConfig::DALI
+)
+
+target_include_directories(native-benchmark-images PRIVATE
+  src
+  ${DALI_INCLUDE_DIRS}
+)
+
+# Native Benchmark App (Views)
+add_executable(native-benchmark-views
+  native-benchmark/view-test/main.cpp
+)
+
+target_link_libraries(native-benchmark-views
+  PRIVATE
+  PkgConfig::DALI
+)
+
+target_include_directories(native-benchmark-views PRIVATE
+  src
+  ${DALI_INCLUDE_DIRS}
+)
