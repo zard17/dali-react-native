@@ -35,7 +35,12 @@ void DaliRenderer::Init(Dali::Application &application) {
   // This ensures actors render in add-order, not by depth
   window.GetRootLayer().SetProperty(Dali::Layer::Property::DEPTH_TEST, false);
 
-  std::cout << "  -> Using direct TOP_LEFT coordinate mapping" << std::endl;
+  // WORKAROUND: DALi Mac/ANGLE bug - Y positions < ~200 don't render
+  // Shift root layer up to compensate for Y offset in DaliMountingManager
+  static const float DALI_MAC_Y_OFFSET = 200.0f;
+  window.GetRootLayer().SetProperty(Dali::Actor::Property::POSITION,
+                                    Dali::Vector3(0.0f, -DALI_MAC_Y_OFFSET, 0.0f));
+  std::cout << "  -> Mac Y offset workaround: +" << DALI_MAC_Y_OFFSET << " (root layer -" << DALI_MAC_Y_OFFSET << ")" << std::endl;
 
   // Load JavaScript bundle and start React app
   mDeviceInstanceManager->LoadJSBundle("bundle.js");
