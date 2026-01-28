@@ -62,7 +62,7 @@
 1. **Consistent Results:** Memory measurements are highly consistent across runs (< 1% variance), indicating stable memory behavior.
 
 2. **Fixed Overhead:** React Native adds approximately 22-24 MB of overhead regardless of the number of UI elements. This overhead includes:
-   - Hermes JavaScript runtime
+   - JavaScriptCore runtime
    - React Native Fabric renderer
    - Shadow tree and layout engine (Yoga)
    - Bridge infrastructure
@@ -93,7 +93,7 @@
 ```
 DALi Version: 2.x (with ANGLE backend)
 React Native: 0.79.x (Fabric enabled)
-Hermes: Enabled
+JS Engine: JavaScriptCore
 Window Mode: Windowed (800x600)
 ```
 
