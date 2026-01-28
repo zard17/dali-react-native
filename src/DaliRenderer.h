@@ -12,8 +12,7 @@ public:
   void Init(Dali::Application &application);
 
 private:
-  bool OnEventLoopTick();
+  bool OnIdle();
   std::unique_ptr<class DeviceInstanceManager> mDeviceInstanceManager;
   std::unique_ptr<class DaliMountingManager> mMountingManager;
-  Dali::Timer mEventLoopTimer;
 };

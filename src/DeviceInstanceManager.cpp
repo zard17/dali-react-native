@@ -459,6 +459,10 @@ void DeviceInstanceManager::SimulateJSExecution(
 
 // Event Loop Tick - called by DALi Timer (or workaround thread)
 bool DeviceInstanceManager::TickEventLoop() {
+  static int tickCount = 0;
+  if (tickCount++ % 600 == 0) {
+    // std::cout << "TickEventLoop Pumped (Idle): " << tickCount << std::endl;
+  }
   try {
     if (mRuntimeScheduler &&
         mRuntime) { // Keep mRuntime check as it was originally

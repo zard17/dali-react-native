@@ -2,6 +2,7 @@
 #include "DaliMountingManager.h"
 #include "DeviceInstanceManager.h"
 #include <dali/dali.h>
+#include <dali/devel-api/adaptor-framework/application-devel.h>
 
 DaliRenderer::DaliRenderer() {
   std::cout << "DaliRenderer Constructed" << std::endl;
@@ -9,12 +10,6 @@ DaliRenderer::DaliRenderer() {
 
 DaliRenderer::~DaliRenderer() {
   std::cout << "DaliRenderer Destructed" << std::endl;
-}
-
-bool DaliRenderer::OnEventLoopTick() {
-  // Tick the RuntimeScheduler to process pending tasks
-  mDeviceInstanceManager->TickEventLoop();
-  return true; // Keep timer running
 }
 
 void DaliRenderer::Init(Dali::Application &application) {
@@ -37,11 +32,17 @@ void DaliRenderer::Init(Dali::Application &application) {
   // Deprecated:
   // mDeviceInstanceManager->SimulateJSExecution(mMountingManager.get());
 
-  // Start a timer to tick the event loop and keep the app running
-  mEventLoopTimer = Dali::Timer::New(16); // ~60fps
-  mEventLoopTimer.TickSignal().Connect(this, &DaliRenderer::OnEventLoopTick);
-  mEventLoopTimer.Start();
+  // Setup Idle Callback for Continuous Event Loop Pumping
+  Dali::DevelApplication::AddIdleWithReturnValue(
+      application, MakeCallback(this, &DaliRenderer::OnIdle));
 
-  std::cout << "Event loop timer started - window will remain open"
+  std::cout << "Event loop setup complete (Driven by Idle Callback)"
             << std::endl;
+}
+
+bool DaliRenderer::OnIdle() {
+  if (mDeviceInstanceManager) {
+    mDeviceInstanceManager->TickEventLoop();
+  }
+  return true;
 }
