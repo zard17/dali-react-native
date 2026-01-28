@@ -1,93 +1,152 @@
 # Architecture: DALi React Native Renderer
 
-This document outlines the architecture of the DALi React Native Renderer, designed to support the React Native New Architecture (Fabric).
+This document outlines the architecture of the DALi React Native Renderer for the New Architecture (Fabric).
 
 ## High-Level Overview
 
-The system bridges the **React Native Fabric** C++ core with the **DALi** Scene Graph. It replaces the platform-specific UI layer (like Android Views or iOS UIViews) with DALi Actors.
+The system bridges **React Native Fabric** (C++) with the **DALi Scene Graph**, replacing platform-specific UI layers (Android Views, iOS UIViews) with DALi Actors.
 
-### Systems Diagram
+### System Diagram
 
-```mermaid
-graph TD
-    subgraph "React Native Layer"
-        JS["JavaScript Code (index.js)"] -->|React| RT[React Runtime]
-        RT -->|JSI| Fabric["Fabric UIManager (C++)"]
-        Fabric -->|Shadow Tree| ST[Shadow Nodes]
-        ST -->|Layout| Yoga[Yoga Layout Engine]
-    end
-
-    subgraph "Bridge / Renderer Layer"
-        Scheduler[Scheduler] -->|Commit| DIM[DeviceInstanceManager]
-        DIM -->|Mutations| MM[DaliMountingManager]
-        MM -->|Create/Update| Comp[Dali Component Factory]
-    end
-
-    subgraph "DALi Layer (Tizen/Mac)"
-        Comp -->|Produces| Actor[DALi Actor]
-        Actor -->|Add to| Win[DALi Window]
-        Input[Input Events] -->|Dispatch| DIM
-    end
-
-    Fabric -.-> Scheduler
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     React Native Layer                          │
+├─────────────────────────────────────────────────────────────────┤
+│  JavaScript (App.js)                                            │
+│       ↓                                                         │
+│  React Runtime ──JSI──> Fabric UIManager (C++)                  │
+│                              ↓                                  │
+│                         Shadow Tree                             │
+│                              ↓                                  │
+│                      Yoga Layout Engine                         │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                    Bridge / Renderer Layer                      │
+├─────────────────────────────────────────────────────────────────┤
+│  Scheduler ──Commit──> DeviceInstanceManager                    │
+│                              ↓                                  │
+│                      DaliMountingManager                        │
+│                              ↓                                  │
+│                    Component Factory                            │
+│              (DaliViewComponent, DaliTextComponent, etc.)       │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                       DALi Layer                                │
+├─────────────────────────────────────────────────────────────────┤
+│  DALi Actors (Control, TextLabel, ImageView)                    │
+│       ↓                                                         │
+│  DALi Window ──ANGLE──> OpenGL ES                               │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Key Components
 
-### 1. DeviceInstance Manager (`DeviceInstanceManager`)
-*   **Role**: Acts as the central controller for the React Native instance.
-*   **Responsibilities**:
-    *   Initializes the JS Runtime (**JavaScriptCore** via `JSCRuntime`).
-    *   Initializes the Fabric **Scheduler** and **SurfaceHandler**.
-    *   Manages the lifecycle of the Surface.
-    *   (Currently) Simulates JS execution for testing the rendering pipeline.
+### 1. DeviceInstanceManager
 
-### 2. DALi Mounting Manager (`DaliMountingManager`)
-*   **Role**: The "Builder" of the visual scene. It receives instructions (Mutations) from the Fabric Scheduler and executes them using DALi APIs.
-*   **Responsibilities**:
-    *   **ProcessMutation**: Handles `Create`, `Delete`, `Update`, `Insert`, `Remove` instructions.
-    *   **Actor Registry**: Maintains a map of `tag` (React ID) to `Dali::Actor`.
-    *   **Tree Management**: Handles parent-child relationships (e.g., adding a View to another View).
-    *   **Root Management**: Resizes the Root View to match the Window.
+**Role**: Central controller for the React Native instance.
+
+**Responsibilities**:
+- Initializes the **JavaScriptCore** runtime via JSI
+- Creates and manages the Fabric **Scheduler**
+- Manages **SurfaceHandler** lifecycle
+- Executes JavaScript bundles
+- Pumps the event loop via DALi idle callbacks
+
+### 2. DaliMountingManager
+
+**Role**: Scene graph builder that translates Fabric mutations to DALi API calls.
+
+**Responsibilities**:
+- **ProcessMutation**: Handles Create, Delete, Update, Insert, Remove operations
+- **Actor Registry**: Maps React tags to DALi Actors
+- **Coordinate Mapping**: Converts React Native coordinates to DALi (TOP_LEFT origin)
+- **Tree Management**: Maintains parent-child actor relationships
 
 ### 3. DALi Components (`src/components/`)
-*   **Role**: Wrappers/Adaptors that map specific React primitives to DALi Toolkit Controls.
-*   **Implementation**:
-    *   `DaliViewComponent` -> `Dali::Toolkit::Control`
-    *   `DaliTextComponent` -> `Dali::Toolkit::TextLabel`
-    *   `DaliImageComponent` -> `Dali::Toolkit::ImageView`
-*   **Props Handling**: 
-    *   View: Background color from ViewProps
-    *   Text: Extracts content from ParagraphState, styling from TextProps
-    *   Image: Extracts source URI from ImageState (resolved by React Native)
 
-### 4. JS Runtime (JavaScriptCore)
-*   We use the **system-provided JavaScriptCore** framework on macOS.
-*   Bridged via `JSCRuntime` (sourced from React Native's `ReactCommon/jsc`).
-*   This avoids the complexity of building the Hermes engine manually for this macOS prototype, while keeping the JSI interface standard.
+Component adapters mapping React primitives to DALi Toolkit Controls:
 
-## Data Flow (Fabric Pipeline)
+| React Component | DALi Control | Props Handled |
+|-----------------|--------------|---------------|
+| `<View>` | `Dali::Toolkit::Control` | backgroundColor, opacity, borderRadius |
+| `<Text>` | `Dali::Toolkit::TextLabel` | text, fontSize, color, fontWeight |
+| `<Image>` | `Dali::Toolkit::ImageView` | source (URI), resizeMode |
 
-1.  **Render Phase (JS)**: React executes JS, creating a React Element Tree.
-2.  **Commit Phase (Fabric)**: Fabric converts this to a C++ Shadow Tree.
-3.  **Layout Phase (Yoga)**: Yoga calculates layout (x, y, width, height) for all nodes.
-4.  **Diffing Phase**: Fabric compares the new Shadow Tree with the old one generating a list of **Mutations**.
-5.  **MountPhase (DALi)**:
-    *   `DaliMountingManager` receives the mutations.
-    *   **Create**: `Dali::Actor::New()` is called.
-    *   **Update**: Properties (Color, Text) are applied.
-    *   **Mount**: Actors are added to the Window or their parent Actors.
+### 4. DaliTextLayoutManager
+
+**Role**: Measures text for Yoga layout calculations.
+
+Uses DALi's text rendering engine to compute text dimensions before layout, ensuring accurate text positioning.
+
+### 5. JS Runtime (JavaScriptCore)
+
+- **JavaScriptCore** - system-provided JSC on macOS
+- Connected via **JSI** (JavaScript Interface)
+- TurboModules for native module access
+- RuntimeScheduler for async task execution
+
+## Data Flow
+
+### Render Pipeline
+
+1. **JS Execution**: React executes, creating element tree
+2. **Fabric Commit**: Element tree converted to C++ Shadow Tree
+3. **Yoga Layout**: Computes (x, y, width, height) for all nodes
+4. **Diffing**: Compares old/new trees, generates Mutations
+5. **Mount Phase**: DaliMountingManager applies mutations to DALi scene
+
+### Mutation Types
+
+| Type | Action |
+|------|--------|
+| `Create` | `Dali::Actor::New()`, register in actor map |
+| `Update` | Apply property changes (color, text, etc.) |
+| `Insert` | Add actor to parent at index |
+| `Remove` | Detach actor from parent |
+| `Delete` | Destroy actor, remove from map |
+
+## Coordinate System
+
+DALi uses TOP_LEFT origin with direct coordinate mapping:
+
+```
+React Native Position (x, y) → DALi Position (x, y)
+```
+
+All actors use:
+- `PARENT_ORIGIN: TOP_LEFT`
+- `ANCHOR_POINT: TOP_LEFT`
+
+## Threading Model
+
+- **Main Thread**: All DALi API calls (rendering, actor manipulation)
+- **JS Thread**: JSC execution (via RuntimeExecutor)
+- **Synchronization**: Idle callbacks pump JS tasks on main thread
 
 ## Directory Structure
 
-``` text
-dali-react-native/
-├── src/
-│   ├── DaliRenderer.*       # Entry point
-│   ├── DaliMountingManager.*# Scene Graph mutation handler
-│   ├── DeviceInstanceManager.* # JS/Scheduler lifecycle
-│   └── components/          # Component mappers
-├── third_party_dependencies/# Native libs (Folly, Glog, etc.)
-├── cmake/                   # Build config
-└── README.md                # Usage guide
 ```
+src/
+├── DaliRenderer.cpp        # App entry, window setup
+├── DaliMountingManager.cpp # Mutation processing
+├── DeviceInstanceManager.cpp # JS runtime, scheduler
+├── DaliTextLayoutManager.cpp # Text measurement
+├── TurboModuleRegistry.cpp # Native modules
+└── components/
+    ├── DaliViewComponent.cpp
+    ├── DaliTextComponent.cpp
+    └── DaliImageComponent.cpp
+```
+
+## Memory Characteristics
+
+| Component | Approximate Size |
+|-----------|------------------|
+| DALi Base | ~96-103 MB |
+| JSC Runtime | ~15 MB |
+| Fabric/Shadow Tree | ~5-10 MB |
+| Per 1000 Views | ~6 MB additional |
+
+Total RN overhead: ~22-24 MB over native DALi.

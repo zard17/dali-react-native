@@ -49,7 +49,10 @@ private:
 };
 
 int main(int argc, char **argv) {
-  Application application = Application::New(&argc, &argv);
+  // Use 800x600 window for consistent testing
+  Application application = Application::New(&argc, &argv, "",
+      Application::OPAQUE,
+      PositionSize(100, 100, 800, 600));
   BenchmarkApp test(application);
   application.MainLoop();
   return 0;

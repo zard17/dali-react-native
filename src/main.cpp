@@ -31,7 +31,10 @@ private:
 };
 
 int main(int argc, char **argv) {
-  Application application = Application::New(&argc, &argv);
+  // Use smaller window for testing (800x600)
+  Application application = Application::New(&argc, &argv, "",
+      Dali::Application::OPAQUE,
+      Dali::PositionSize(100, 100, 800, 600));
   DaliRnDemo test(application);
   application.MainLoop();
   return 0;

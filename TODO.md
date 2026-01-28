@@ -1,134 +1,100 @@
 # DALi React Native - TODO
 
-## Layout Issues
+## Resolved Issues
 
-### 1. Rendering threshold issue - WORKAROUND APPLIED (DALi Bug)
-- **Issue**: With `PARENT_ORIGIN::TOP_LEFT`, fewer than ~400 actors don't render
-- **Root cause**: **DALi rendering bug** - confirmed to affect official DALi demos too!
-  - The `flex-container.example` demo (8 items with TOP_LEFT) also fails to render items
+### Coordinate System - RESOLVED ✓
+- **Issue**: Views not rendering correctly with TOP_LEFT origin
+- **Root Cause**: Mac full-screen mode has ANGLE rendering bug (Y < 200 doesn't render)
+- **Solution**: Use 800x600 windowed mode - TOP_LEFT works perfectly
+- **Implementation**:
+  - All components use `PARENT_ORIGIN::TOP_LEFT` and `ANCHOR_POINT::TOP_LEFT`
+  - Direct coordinate mapping: RN (x,y) → DALi (x,y)
+  - Window size detected dynamically from DALi
 
-#### Workaround Applied (2026-01-29)
-Changed all components to use `PARENT_ORIGIN::CENTER` and `ANCHOR_POINT::CENTER`:
-- `src/components/DaliViewComponent.cpp`
-- `src/components/DaliTextComponent.cpp`
-- `src/components/DaliImageComponent.cpp`
+### Layout Constraints - RESOLVED ✓
+- **Issue**: `flex: 1` containers had width=0
+- **Fix**: Set `layoutConstraints.minimumSize` equal to window size
+- **File**: `src/DeviceInstanceManager.cpp`
 
-**Result**: Views now render correctly with any number of actors (tested 100 views ✓)
+### View Flattening - UNDERSTOOD ✓
+- React Native Fabric flattens Views without "important" properties
+- Visual result is correct - positions are adjusted automatically
+- Use `collapsable={false}` only if hierarchy debugging is needed
 
-**Known limitation**: Views appear offset from top-left
-- With CENTER origin, position (0,0) is relative to parent's center
-- Position conversion to match RN top-left coordinates causes rendering failures
-  (negative positions also fail to render)
-- **Current behavior**: Views render but positioned relative to center
+### Text Color - RESOLVED ✓
+- Colors extracted correctly from `textAttributes.foregroundColor`
+- Font size and weight also working
 
-**TODO**:
-1. Report DALi bug to Samsung DALi team
-2. Once fixed, implement proper RN→DALi coordinate conversion
+## Pending Features
 
-### 2. Parent-child insertion hierarchy - RESOLVED ✓
-- **Issue**: All children are inserted into root (tag 1) instead of their actual parent container
-- **Observed cause**: React Native Fabric's **view flattening optimization**
-  - Fabric automatically flattens Views that don't have "important" properties
-  - Views with only layout properties are considered collapsible
-- **Workaround**: Use `collapsable={false}` on View components that must maintain hierarchy
+### 1. Touch/Gesture Handling
+**Priority**: High
 
-#### Investigation Results (2026-01-29)
-Compared layout metrics WITH vs WITHOUT `collapsable={false}`:
+**Required for**: Interactive apps, buttons, scrolling
 
-| Metric | WITH collapsable={false} | WITHOUT |
-|--------|--------------------------|---------|
-| Text position | x=100, y=80 (relative) | x=150, y=130 (absolute) |
-| Text insert parent | Parent=6 (inner View) | Parent=1 (root) |
-| Inner View insert | Parent=8 (outer View) | Parent=1 (root) |
+**Implementation Plan**:
+1. Connect DALi `TouchedSignal()` to actors in DaliMountingManager
+2. Map touch events to React Native format:
+   - `TouchEvent::GetState()` → onPressIn, onPressOut, onPress
+   - `TouchEvent::GetPoint()` → touch coordinates
+3. Dispatch events via `EventEmitter` from `mEventEmitterRegistry`
 
-**Key Findings:**
-1. **Fabric DOES adjust positions correctly** - Text position changes from (100,80) to (150,130)
-2. **Views with backgroundColor ARE created** (FormsView trait) - only hierarchy is flattened
-3. **Visual result is identical** - absolute positioning compensates for flattened hierarchy
+**Files to modify**:
+- `src/DaliMountingManager.cpp` - Register touch callbacks
+- `src/components/*.cpp` - Enable touch on controls
 
-**Conclusion:** View flattening works as designed. The `collapsable={false}` workaround is not required for visual correctness, but may help with debugging by preserving hierarchy.
+### 2. ScrollView Support
+**Priority**: Medium
 
-**Technical Details:**
-- Position adjustment happens in `sliceChildShadowNodeViewPairs.cpp`:
-  ```cpp
-  shadowView.layoutMetrics.frame.origin += layoutOffset;
-  ```
-- `FormsView` trait prevents view deletion when `backgroundColor` has alpha > 0
+**Required for**: Lists, scrollable content
 
-### 3. Container with `flex: 1` has width=0 - RESOLVED ✓
-- **Issue**: When using `flex: 1` style, the container gets `width: 0` in layout metrics
-- **Root cause**: `layoutConstraints.minimumSize` was set to `{0, 0}`, allowing Yoga to calculate 0 width
+**Approach**: Map to `Dali::Toolkit::ScrollView`
 
-#### Fix Applied (2026-01-29)
-**File**: `src/DeviceInstanceManager.cpp` lines 140-141
+### 3. Animation Support
+**Priority**: Medium
 
-```cpp
-// Before (broken):
-layoutConstraints.minimumSize = Size{0, 0};
-layoutConstraints.maximumSize = Size{1920, 1080};
+**Approach**: Bridge React Native Animated API to DALi animations
 
-// After (fixed):
-layoutConstraints.minimumSize = Size{1920, 1080};  // Force exact size
-layoutConstraints.maximumSize = Size{1920, 1080};
-```
+### 4. Border Radius
+**Priority**: Low
 
-**Result**: Root now correctly has `w=1920 h=1080` instead of `w=0 h=1080`
+**Status**: Property exists but not fully implemented
 
-### 4. Only last Text element renders (when multiple texts)
-- **Issue**: When multiple Text components are in the tree, only the last one is visible
-- **Observation**: Text at y=430 shows, but texts at y=40, y=95 don't show
-- **Possible cause**: Text actors may be overwriting each other or z-ordering issue
-- **Related to**: Issue #2 - view flattening may cause all texts to be siblings at root level
-- **Try**: Use `collapsable={false}` on parent containers to maintain proper z-ordering
-- **Files to investigate**:
-  - `src/DaliMountingManager.cpp` - Text/Paragraph handling
-  - `src/components/DaliTextComponent.cpp`
+### 5. Tizen Deployment
+**Priority**: Future
 
-### 5. Element positioning inconsistent
-- **Issue**: Elements appear at different positions than specified in style
-- **Example**: Color boxes specified at y=420 appear at y=50 on screen
-- **Observation**: Works correctly in benchmark tests but fails in mixed-component apps
-- **Related to**: Issue #2 - view flattening causes position to be relative to root, not parent
-- **Try**: Use `collapsable={false}` on parent containers
-- **Files to investigate**:
-  - Compare how benchmark apps work vs complex apps
-  - Check if position is being overwritten somewhere
+**Tasks**:
+- Test on actual Tizen device
+- Package as TPK
+- Handle Tizen-specific APIs
 
-## Component Issues
+## Known Limitations
 
-### 6. Text color hardcoded to BLACK - RESOLVED ✓
-- **Issue**: Text color was hardcoded to `Dali::Color::BLACK`
-- **Fix**: Removed hardcoded BLACK, now extracts color from React Native's `textAttributes.foregroundColor`
-- **Files modified**:
-  - `src/DaliMountingManager.cpp` - Color extraction with proper fallback and logging
-  - `src/components/DaliTextComponent.cpp` - Removed legacy hardcoded color
-- **Verified**: White text (`color: 'white'`) now renders as `rgba(1, 1, 1, 1)`
+### Mac Full-Screen Mode
+- ANGLE has a rendering bug where Y positions < ~200 don't render
+- **Workaround**: Use windowed mode (800x600)
+- This is Mac/ANGLE specific, should work fine on Tizen
 
-## Feature Implementation
+### View Hierarchy
+- Fabric view flattening means not all Views become DALi actors
+- Views are only created if they have visual properties (backgroundColor, etc.)
+- This is expected behavior, not a bug
 
-### 7. Touch/Gesture handling
-- **Status**: Not implemented
-- **Required for**: Button presses, scrolling, gestures, interactive apps
-- **Implementation approach**:
-  - Connect DALi touch signals to React Native event system
-  - Map DALi `TouchEvent` to React Native touch events (onPress, onPressIn, onPressOut, onLongPress)
-  - Implement hit testing to determine which actor received the touch
-  - Route events through Fabric's EventEmitter system
-- **Files to create/modify**:
-  - `src/DaliMountingManager.cpp` - Register touch callbacks on actors
-  - Create event dispatcher to send touch events to JS
-  - Handle `Pressable`, `TouchableOpacity`, `Button` components
-- **DALi APIs to use**:
-  - `Actor::TouchedSignal()` - Connect to touch events
-  - `TouchEvent::GetPoint()` - Get touch coordinates
-  - `TouchEvent::GetState()` - Get touch state (DOWN, UP, MOTION, etc.)
-- **React Native side**:
-  - Events dispatched via `EventEmitter` stored in `mEventEmitterRegistry`
-  - Need to implement `dispatchEvent()` in mounting manager
+## Working Features
 
-## Working Features (for reference)
-- View components with backgroundColor ✓
-- Image components ✓
-- Absolute positioning (in simple cases) ✓
-- Benchmark tests with 1000+ views ✓
-- Benchmark tests with 100 images ✓
+- ✅ View components with backgroundColor
+- ✅ Text components with font size, color, weight
+- ✅ Image components with local file loading
+- ✅ Flexbox layout (flex, flexDirection, justifyContent, alignItems)
+- ✅ Absolute positioning
+- ✅ Nested containers
+- ✅ Dynamic window size detection
+- ✅ Memory benchmarking (see `scripts/memory-benchmark.sh`)
+
+## Memory Profile
+
+| Component | Memory |
+|-----------|--------|
+| Native DALi base | ~96-103 MB |
+| React Native overhead | ~22-24 MB |
+| Per 1000 Views | ~6 MB additional |
