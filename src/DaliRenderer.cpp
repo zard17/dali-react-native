@@ -28,12 +28,6 @@ void DaliRenderer::Init(Dali::Application &application) {
   // This ensures actors render in add-order, not by depth
   window.GetRootLayer().SetProperty(Dali::Layer::Property::DEPTH_TEST, false);
 
-  // Disable frustum culling on the default render task
-  Dali::RenderTaskList taskList = window.GetRenderTaskList();
-  Dali::RenderTask defaultTask = taskList.GetTask(0);
-  defaultTask.SetCullMode(false);
-  std::cout << "  -> Frustum culling disabled on default render task" << std::endl;
-
   // WORKAROUND: DALi Mac/ANGLE bug - Y positions < 200 don't render with TOP_LEFT
   // Shift root layer up to compensate for Y offset applied in DaliMountingManager
   static const float DALI_MAC_Y_OFFSET = 200.0f;
