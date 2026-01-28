@@ -182,10 +182,11 @@ void DaliMountingManager::ProcessMutation(
   case ShadowViewMutation::Type::Insert: {
     auto parentTag = mutation.parentTag;
     auto childTag = mutation.newChildShadowView.tag;
-    // auto index = mutation.index; // Not used in current Dali::Actor::Add
+    auto index = mutation.index;
 
     std::cout << "  -> Insert: Child=" << childTag
-              << " into Parent=" << parentTag << std::endl;
+              << " into Parent=" << parentTag
+              << " at index=" << index << std::endl;
 
     auto parentIt = mActorRegistry.find(parentTag);
     auto childIt = mActorRegistry.find(childTag);

@@ -13,13 +13,25 @@
   - Check how `layoutMetrics.frame` is being applied to DALi actors
   - Verify Yoga is calculating correct positions for centered layouts
 
-### 2. Parent-child insertion hierarchy
+### 2. Parent-child insertion hierarchy ✓ UNDERSTOOD
 - **Issue**: All children are inserted into root (tag 1) instead of their actual parent container
-- **Example**: In logs, `Insert: Child=4 into Parent=1` even when child should be inserted into a container (tag 22)
-- **Impact**: Z-ordering issues, parent containers may overlap children
-- **Files to investigate**:
-  - `src/DaliMountingManager.cpp` - `ProcessMutation()` for Insert operations
-  - Check how parent tags are resolved during Insert mutations
+- **Root cause**: React Native Fabric's **view flattening optimization**
+  - Fabric automatically flattens Views that don't have "important" properties
+  - Views with only backgroundColor, position styles are considered collapsible
+  - This is intentional optimization, not a bug in DaliMountingManager
+- **Solution**: Use `collapsable={false}` on View components that must maintain hierarchy
+  ```jsx
+  <View style={{...}} collapsable={false}>
+    <View style={{...}} collapsable={false}>
+      {/* children */}
+    </View>
+  </View>
+  ```
+- **Verified**: With `collapsable={false}`, Insert mutations show correct parent tags:
+  - `Insert: Child=4 into Parent=6` (nested correctly)
+  - `Insert: Child=6 into Parent=8` (nested correctly)
+  - `Insert: Child=8 into Parent=1` (root attachment)
+- **Alternative**: Consider implementing NativeComponent that marks views as non-collapsible by default
 
 ### 3. Container with `flex: 1` has width=0
 - **Issue**: When using `flex: 1` style, the container gets `width: 0` in layout metrics
@@ -34,6 +46,8 @@
 - **Issue**: When multiple Text components are in the tree, only the last one is visible
 - **Observation**: Text at y=430 shows, but texts at y=40, y=95 don't show
 - **Possible cause**: Text actors may be overwriting each other or z-ordering issue
+- **Related to**: Issue #2 - view flattening may cause all texts to be siblings at root level
+- **Try**: Use `collapsable={false}` on parent containers to maintain proper z-ordering
 - **Files to investigate**:
   - `src/DaliMountingManager.cpp` - Text/Paragraph handling
   - `src/components/DaliTextComponent.cpp`
@@ -42,6 +56,8 @@
 - **Issue**: Elements appear at different positions than specified in style
 - **Example**: Color boxes specified at y=420 appear at y=50 on screen
 - **Observation**: Works correctly in benchmark tests but fails in mixed-component apps
+- **Related to**: Issue #2 - view flattening causes position to be relative to root, not parent
+- **Try**: Use `collapsable={false}` on parent containers
 - **Files to investigate**:
   - Compare how benchmark apps work vs complex apps
   - Check if position is being overwritten somewhere

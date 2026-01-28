@@ -1,17 +1,23 @@
 import React from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text } from 'react-native';
 
-// Simple demo app - showcases View, Text, and Image components
+// Test app to debug parent-child hierarchy
+// Using collapsable={false} to prevent React Native view flattening
 const App = () => {
     return (
-        <>
-            <Text style={{ position: 'absolute', top: 50, left: 50, fontSize: 32 }}>
-                Hello from React Native!
-            </Text>
-            <Text style={{ position: 'absolute', top: 100, left: 50, fontSize: 18 }}>
-                Powered by DALi + Fabric
-            </Text>
-        </>
+        <View
+            style={{ position: 'absolute', top: 0, left: 0, width: 800, height: 600, backgroundColor: '#333' }}
+            collapsable={false}
+        >
+            <View
+                style={{ position: 'absolute', top: 50, left: 50, width: 300, height: 200, backgroundColor: '#4CAF50' }}
+                collapsable={false}
+            >
+                <Text style={{ position: 'absolute', top: 80, left: 100, fontSize: 20, color: 'white' }}>
+                    Nested Text
+                </Text>
+            </View>
+        </View>
     );
 };
 

@@ -15,3 +15,4 @@ third_party_dependencies/build_react_native/*
 # 4. But allow specific files
 !third_party_dependencies/build_react_native/CMakeLists.txt
 !third_party_dependencies/build_react_native/dummy.cpp
+debug.log
