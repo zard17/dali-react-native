@@ -3,6 +3,8 @@
 #include "components/DaliTextComponent.h"
 #include "components/DaliViewComponent.h"
 #include <iostream>
+#include <react/renderer/components/image/ImageProps.h>
+#include <react/renderer/components/image/ImageState.h>
 #include <react/renderer/components/text/ParagraphProps.h>
 #include <react/renderer/components/text/ParagraphState.h>
 #include <react/renderer/components/view/ViewProps.h>
@@ -117,6 +119,41 @@ void DaliMountingManager::ProcessMutation(
         }
       }
 
+      // Extract image source from ImageState for Image components
+      if (componentName == "Image" && view.state) {
+        auto concreteState =
+            std::dynamic_pointer_cast<const ConcreteState<ImageState>>(
+                view.state);
+        if (concreteState) {
+          auto &imageState = concreteState->getData();
+          auto imageSource = imageState.getImageSource();
+          std::string uri = imageSource.uri;
+
+          if (!uri.empty()) {
+            auto imageView = Dali::Toolkit::ImageView::DownCast(actor);
+            if (imageView) {
+              imageView.SetImage(uri);
+              std::cout << "  -> Image URL set: " << uri << std::endl;
+            }
+          } else {
+            std::cout << "  -> Warning: Empty image URI" << std::endl;
+          }
+        } else {
+          // Try extracting from props if state is not available
+          auto imageProps =
+              std::dynamic_pointer_cast<const ImageProps>(view.props);
+          if (imageProps && !imageProps->sources.empty()) {
+            std::string uri = imageProps->sources[0].uri;
+            if (!uri.empty()) {
+              auto imageView = Dali::Toolkit::ImageView::DownCast(actor);
+              if (imageView) {
+                imageView.SetImage(uri);
+                std::cout << "  -> Image URL from props: " << uri << std::endl;
+              }
+            }
+          }
+        }
+      }
       // If this is the root view (tag 1), add it to the window
       if (tag == 1 && mWindow) {
         mWindow.Add(actor);

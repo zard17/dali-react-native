@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppRegistry, View, Text } from 'react-native';
+import { AppRegistry, View, Text, Image } from 'react-native';
 
 const App = () => {
     console.log('App: Rendering...');
@@ -8,6 +8,10 @@ const App = () => {
     }, []);
     return (
         <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
+            <Image
+                source={{ uri: '/Users/youngsus/tizen/dali-react-native/screenshot.png' }}
+                style={{ width: 200, height: 200, marginBottom: 20 }}
+            />
             <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'blue' }}>
                 Hello from React Native!
             </Text>
