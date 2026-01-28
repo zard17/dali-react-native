@@ -84,9 +84,6 @@ void DaliMountingManager::ProcessMutation(
           if (textLabel && !fullText.empty()) {
             textLabel.SetProperty(Dali::Toolkit::TextLabel::Property::TEXT,
                                   fullText);
-            textLabel.SetProperty(
-                Dali::Toolkit::TextLabel::Property::TEXT_COLOR,
-                Dali::Color::BLACK);
 
             // Always set a visible default point size
             textLabel.SetProperty(
@@ -94,9 +91,11 @@ void DaliMountingManager::ProcessMutation(
 
             std::cout << "  -> Text set: \"" << fullText << "\"" << std::endl;
 
-            // Apply text color from first fragment if available
+            // Apply text color and font size from first fragment if available
             if (!fragments.empty()) {
               auto &textAttributes = fragments[0].textAttributes;
+
+              // Apply text color from React Native
               if (textAttributes.foregroundColor) {
                 auto colorComponents =
                     colorComponentsFromColor(textAttributes.foregroundColor);
@@ -104,7 +103,18 @@ void DaliMountingManager::ProcessMutation(
                     Dali::Toolkit::TextLabel::Property::TEXT_COLOR,
                     Dali::Vector4(colorComponents.red, colorComponents.green,
                                   colorComponents.blue, colorComponents.alpha));
+                std::cout << "  -> Text color: rgba(" << colorComponents.red
+                          << ", " << colorComponents.green << ", "
+                          << colorComponents.blue << ", "
+                          << colorComponents.alpha << ")" << std::endl;
+              } else {
+                // Default to BLACK if no color specified
+                textLabel.SetProperty(
+                    Dali::Toolkit::TextLabel::Property::TEXT_COLOR,
+                    Dali::Color::BLACK);
+                std::cout << "  -> Text color: BLACK (default)" << std::endl;
               }
+
               // Apply font size from React Native if available
               if (!std::isnan(textAttributes.fontSize) &&
                   textAttributes.fontSize > 0) {
@@ -114,6 +124,12 @@ void DaliMountingManager::ProcessMutation(
                 std::cout << "  -> Font size: " << textAttributes.fontSize
                           << std::endl;
               }
+            } else {
+              // No fragments - use default BLACK
+              textLabel.SetProperty(
+                  Dali::Toolkit::TextLabel::Property::TEXT_COLOR,
+                  Dali::Color::BLACK);
+              std::cout << "  -> Text color: BLACK (no fragments)" << std::endl;
             }
           }
         }
@@ -192,8 +208,37 @@ void DaliMountingManager::ProcessMutation(
     auto childIt = mActorRegistry.find(childTag);
 
     if (parentIt != mActorRegistry.end() && childIt != mActorRegistry.end()) {
+      // Add children to their actual parent (proper hierarchy)
+      // Children use TOP_LEFT/TOP_LEFT relative to parent which has CENTER/CENTER
       parentIt->second.Add(childIt->second);
-      std::cout << "  -> Inserted successfully" << std::endl;
+      std::cout << "  -> Inserted into parent (tag " << parentTag << ")" << std::endl;
+
+      // Debug: Check child position and visibility after Insert
+      auto &child = childIt->second;
+      auto pos = child.GetProperty<Dali::Vector3>(Dali::Actor::Property::POSITION);
+      auto size = child.GetProperty<Dali::Vector2>(Dali::Actor::Property::SIZE);
+      auto anchor = child.GetProperty<Dali::Vector3>(Dali::Actor::Property::ANCHOR_POINT);
+      auto parentOrigin = child.GetProperty<Dali::Vector3>(Dali::Actor::Property::PARENT_ORIGIN);
+      auto visible = child.GetProperty<bool>(Dali::Actor::Property::VISIBLE);
+      auto opacity = child.GetProperty<float>(Dali::Actor::Property::OPACITY);
+      std::cout << "  -> After Insert - pos=(" << pos.x << "," << pos.y << ") size=("
+                << size.width << "x" << size.height << ")"
+                << " anchor=(" << anchor.x << "," << anchor.y << ")"
+                << " parentOrigin=(" << parentOrigin.x << "," << parentOrigin.y << ")"
+                << " visible=" << visible << " opacity=" << opacity
+                << std::endl;
+
+      // Also check parent properties
+      auto &parent = parentIt->second;
+      auto parentPos = parent.GetProperty<Dali::Vector3>(Dali::Actor::Property::POSITION);
+      auto parentSize = parent.GetProperty<Dali::Vector2>(Dali::Actor::Property::SIZE);
+      auto parentAnchor = parent.GetProperty<Dali::Vector3>(Dali::Actor::Property::ANCHOR_POINT);
+      auto parentPO = parent.GetProperty<Dali::Vector3>(Dali::Actor::Property::PARENT_ORIGIN);
+      std::cout << "  -> Parent - pos=(" << parentPos.x << "," << parentPos.y << ") size=("
+                << parentSize.width << "x" << parentSize.height << ")"
+                << " anchor=(" << parentAnchor.x << "," << parentAnchor.y << ")"
+                << " parentOrigin=(" << parentPO.x << "," << parentPO.y << ")"
+                << std::endl;
     } else {
       std::cout << "Warning: Parent(" << parentTag << ") or Child(" << childTag
                 << ") not found for Insert" << std::endl;
@@ -232,17 +277,18 @@ void DaliMountingManager::ProcessMutation(
         // If this is the root view (tag 1), add it to the window
         if (tag == 1 && mWindow) {
           mWindow.Add(actor);
-          // Set root actor size to window size
-          Dali::Window::WindowSize winSize = mWindow.GetSize();
-          actor.SetProperty(
-              Dali::Actor::Property::SIZE,
-              Dali::Vector2(winSize.GetWidth(), winSize.GetHeight()));
+
+          // Use CENTER/CENTER for root
           actor.SetProperty(Dali::Actor::Property::ANCHOR_POINT,
-                            Dali::AnchorPoint::TOP_LEFT);
+                            Dali::AnchorPoint::CENTER);
           actor.SetProperty(Dali::Actor::Property::PARENT_ORIGIN,
-                            Dali::ParentOrigin::TOP_LEFT);
+                            Dali::ParentOrigin::CENTER);
+          actor.SetResizePolicy(Dali::ResizePolicy::FILL_TO_PARENT,
+                                Dali::Dimension::ALL_DIMENSIONS);
+          actor.SetProperty(Dali::Actor::Property::POSITION, Dali::Vector3(0, 0, 0));
+          Dali::Window::WindowSize winSize = mWindow.GetSize();
           std::cout
-              << "  -> Root actor (tag 1) created and added to window (size: "
+              << "  -> Root actor (tag 1) with FILL_TO_PARENT+TOP_LEFT/TOP_LEFT (window: "
               << winSize.GetWidth() << "x" << winSize.GetHeight() << ")"
               << std::endl;
         }
@@ -354,17 +400,45 @@ void DaliMountingManager::UpdateProps(
 
 void DaliMountingManager::UpdateLayout(
     Dali::Actor actor, facebook::react::LayoutMetrics const &layoutMetrics) {
-  // DALi uses Top-Left origin usually. Fabric uses Frame (x, y, w, h).
+  // With PARENT_ORIGIN=CENTER and ANCHOR_POINT=TOP_LEFT:
+  // Children are positioned relative to parent's center
+  // To place at correct screen position, we need to offset by -half_parent_size
+  // Testing with small negative offset first
   auto frame = layoutMetrics.frame;
 
-  std::cout << "  -> Layout: x=" << frame.origin.x << " y=" << frame.origin.y
-            << " w=" << frame.size.width << " h=" << frame.size.height
+  // CENTER/CENTER: position actor center relative to parent center
+  // RN top-left (x,y) with size (w,h) -> actor center at (x+w/2, y+h/2)
+  // DALi position = actor_center - parent_center = (x+w/2-960, y+h/2-540)
+  float actorCenterX = frame.origin.x + frame.size.width / 2.0f;
+  float actorCenterY = frame.origin.y + frame.size.height / 2.0f;
+  float finalX = actorCenterX - 960.0f;
+  float finalY = actorCenterY - 540.0f;
+
+  std::cout << "  -> Layout: RN(" << frame.origin.x << "," << frame.origin.y
+            << ") -> DALi(" << finalX << "," << finalY << ")"
+            << " size=" << frame.size.width << "x" << frame.size.height
             << std::endl;
 
   actor.SetProperty(Dali::Actor::Property::POSITION,
-                    Dali::Vector3(frame.origin.x, frame.origin.y, 0));
+                    Dali::Vector3(finalX, finalY, 0));
   actor.SetProperty(Dali::Actor::Property::SIZE,
                     Dali::Vector2(frame.size.width, frame.size.height));
+
+  // Debug: Verify the properties were set correctly
+  auto pos = actor.GetProperty<Dali::Vector3>(Dali::Actor::Property::POSITION);
+  auto size = actor.GetProperty<Dali::Vector2>(Dali::Actor::Property::SIZE);
+  auto anchor = actor.GetProperty<Dali::Vector3>(Dali::Actor::Property::ANCHOR_POINT);
+  auto parentOrigin = actor.GetProperty<Dali::Vector3>(Dali::Actor::Property::PARENT_ORIGIN);
+  auto worldPos = actor.GetCurrentProperty<Dali::Vector3>(Dali::Actor::Property::WORLD_POSITION);
+  auto screenPos = actor.GetCurrentProperty<Dali::Vector2>(Dali::Actor::Property::SCREEN_POSITION);
+  std::cout << "  -> DALi Actor: pos=(" << pos.x << "," << pos.y << ") size=("
+            << size.width << "x" << size.height << ")"
+            << " anchor=(" << anchor.x << "," << anchor.y << ")"
+            << " parentOrigin=(" << parentOrigin.x << "," << parentOrigin.y << ")"
+            << std::endl;
+  std::cout << "  -> World: (" << worldPos.x << "," << worldPos.y << ")"
+            << " Screen: (" << screenPos.x << "," << screenPos.y << ")"
+            << std::endl;
 }
 
 void DaliMountingManager::DispatchEvent(int tag, std::string eventName) {

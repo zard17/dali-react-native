@@ -21,7 +21,28 @@ void DaliRenderer::Init(Dali::Application &application) {
   mMountingManager = std::make_unique<DaliMountingManager>();
   mDeviceInstanceManager->SetMountingManager(mMountingManager.get());
 
-  mMountingManager->SetWindow(application.GetWindow());
+  Dali::Window window = application.GetWindow();
+  mMountingManager->SetWindow(window);
+
+  // Disable depth test for proper 2D rendering order (painter's algorithm)
+  // This ensures actors render in add-order, not by depth
+  window.GetRootLayer().SetProperty(Dali::Layer::Property::DEPTH_TEST, false);
+
+  // Disable frustum culling on the default render task
+  Dali::RenderTaskList taskList = window.GetRenderTaskList();
+  Dali::RenderTask defaultTask = taskList.GetTask(0);
+  defaultTask.SetCullMode(false);
+  std::cout << "  -> Frustum culling disabled on default render task" << std::endl;
+
+  // Create a custom offset layer using CENTER/CENTER
+  // This layer will contain all actors and use its center as the origin
+  Dali::Layer offsetLayer = Dali::Layer::New();
+  offsetLayer.SetProperty(Dali::Actor::Property::PARENT_ORIGIN, Dali::ParentOrigin::CENTER);
+  offsetLayer.SetProperty(Dali::Actor::Property::ANCHOR_POINT, Dali::AnchorPoint::CENTER);
+  offsetLayer.SetProperty(Dali::Actor::Property::SIZE, Dali::Vector2(1920.0f, 1080.0f));
+  offsetLayer.SetProperty(Dali::Actor::Property::POSITION, Dali::Vector3(0.0f, 0.0f, 0.0f));
+  window.Add(offsetLayer);
+  std::cout << "  -> Custom offset layer created with CENTER/CENTER" << std::endl;
 
   // Load JavaScript bundle and start React app
   mDeviceInstanceManager->LoadJSBundle("bundle.js");

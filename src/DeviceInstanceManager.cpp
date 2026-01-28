@@ -135,9 +135,11 @@ void DeviceInstanceManager::Initialize() {
   mSurfaceHandler->setContextContainer(mContextContainer);
 
   // Set layout constraints (required before starting surface)
+  // Note: minimumSize must equal maximumSize for root to have correct dimensions
+  // Otherwise Yoga may calculate root width/height as 0 for flex:1 layouts
   LayoutConstraints layoutConstraints;
   layoutConstraints.layoutDirection = LayoutDirection::LeftToRight;
-  layoutConstraints.minimumSize = Size{0, 0};
+  layoutConstraints.minimumSize = Size{1920, 1080};  // Force exact size
   layoutConstraints.maximumSize = Size{1920, 1080};
 
   LayoutContext layoutContext;

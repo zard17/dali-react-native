@@ -2,42 +2,77 @@
 
 ## Layout Issues
 
-### 1. Flexbox centering not working (justifyContent/alignItems)
-- **Issue**: `justifyContent: 'center'` and `alignItems: 'center'` don't properly center child elements
-- **Expected**: Child views should be centered within parent when using flexbox centering
-- **Actual**: Children appear at top-left instead of center
-- **Workaround**: Using explicit position calculation with `Dimensions.get('window')`
-- **Root cause**: Likely a mapping issue between Yoga layout output and DALi coordinate system
-- **Files to investigate**:
-  - `src/DaliMountingManager.cpp` - `UpdateLayout()` function
-  - Check how `layoutMetrics.frame` is being applied to DALi actors
-  - Verify Yoga is calculating correct positions for centered layouts
+### 1. Rendering threshold issue - WORKAROUND APPLIED (DALi Bug)
+- **Issue**: With `PARENT_ORIGIN::TOP_LEFT`, fewer than ~400 actors don't render
+- **Root cause**: **DALi rendering bug** - confirmed to affect official DALi demos too!
+  - The `flex-container.example` demo (8 items with TOP_LEFT) also fails to render items
 
-### 2. Parent-child insertion hierarchy - INVESTIGATION IN PROGRESS
+#### Workaround Applied (2026-01-29)
+Changed all components to use `PARENT_ORIGIN::CENTER` and `ANCHOR_POINT::CENTER`:
+- `src/components/DaliViewComponent.cpp`
+- `src/components/DaliTextComponent.cpp`
+- `src/components/DaliImageComponent.cpp`
+
+**Result**: Views now render correctly with any number of actors (tested 100 views ✓)
+
+**Known limitation**: Views appear offset from top-left
+- With CENTER origin, position (0,0) is relative to parent's center
+- Position conversion to match RN top-left coordinates causes rendering failures
+  (negative positions also fail to render)
+- **Current behavior**: Views render but positioned relative to center
+
+**TODO**:
+1. Report DALi bug to Samsung DALi team
+2. Once fixed, implement proper RN→DALi coordinate conversion
+
+### 2. Parent-child insertion hierarchy - RESOLVED ✓
 - **Issue**: All children are inserted into root (tag 1) instead of their actual parent container
 - **Observed cause**: React Native Fabric's **view flattening optimization**
   - Fabric automatically flattens Views that don't have "important" properties
-  - Views with only backgroundColor, position styles are considered collapsible
+  - Views with only layout properties are considered collapsible
 - **Workaround**: Use `collapsable={false}` on View components that must maintain hierarchy
-- **Verified**: With `collapsable={false}`, Insert mutations show correct parent tags
 
-#### Open Question: Why does view flattening cause visual issues?
-- In theory, view flattening should be **transparent** - same visual result, better performance
-- Yoga should recalculate child positions to be absolute (relative to new parent)
-- **Need to investigate**: Compare layout metrics WITH vs WITHOUT `collapsable={false}`
-  - WITH collapsable={false}: Text at (100, 80) relative to parent at (50, 50) → visual (150, 130)
-  - WITHOUT: If positions aren't adjusted, Text would appear at (100, 80) instead of (150, 130)
-- **Hypothesis**: Either Yoga isn't adjusting positions, or our DALi implementation needs to handle this
-- **Next step**: Run app without collapsable, capture layout metrics, compare positions
+#### Investigation Results (2026-01-29)
+Compared layout metrics WITH vs WITHOUT `collapsable={false}`:
 
-### 3. Container with `flex: 1` has width=0
+| Metric | WITH collapsable={false} | WITHOUT |
+|--------|--------------------------|---------|
+| Text position | x=100, y=80 (relative) | x=150, y=130 (absolute) |
+| Text insert parent | Parent=6 (inner View) | Parent=1 (root) |
+| Inner View insert | Parent=8 (outer View) | Parent=1 (root) |
+
+**Key Findings:**
+1. **Fabric DOES adjust positions correctly** - Text position changes from (100,80) to (150,130)
+2. **Views with backgroundColor ARE created** (FormsView trait) - only hierarchy is flattened
+3. **Visual result is identical** - absolute positioning compensates for flattened hierarchy
+
+**Conclusion:** View flattening works as designed. The `collapsable={false}` workaround is not required for visual correctness, but may help with debugging by preserving hierarchy.
+
+**Technical Details:**
+- Position adjustment happens in `sliceChildShadowNodeViewPairs.cpp`:
+  ```cpp
+  shadowView.layoutMetrics.frame.origin += layoutOffset;
+  ```
+- `FormsView` trait prevents view deletion when `backgroundColor` has alpha > 0
+
+### 3. Container with `flex: 1` has width=0 - RESOLVED ✓
 - **Issue**: When using `flex: 1` style, the container gets `width: 0` in layout metrics
-- **Expected**: Container should expand to fill parent
-- **Actual**: Container has height but 0 width
-- **Workaround**: Use explicit `width` and `height` instead of `flex: 1`
-- **Files to investigate**:
-  - Check Yoga layout constraints being passed to root surface
-  - Verify surface size is propagated correctly
+- **Root cause**: `layoutConstraints.minimumSize` was set to `{0, 0}`, allowing Yoga to calculate 0 width
+
+#### Fix Applied (2026-01-29)
+**File**: `src/DeviceInstanceManager.cpp` lines 140-141
+
+```cpp
+// Before (broken):
+layoutConstraints.minimumSize = Size{0, 0};
+layoutConstraints.maximumSize = Size{1920, 1080};
+
+// After (fixed):
+layoutConstraints.minimumSize = Size{1920, 1080};  // Force exact size
+layoutConstraints.maximumSize = Size{1920, 1080};
+```
+
+**Result**: Root now correctly has `w=1920 h=1080` instead of `w=0 h=1080`
 
 ### 4. Only last Text element renders (when multiple texts)
 - **Issue**: When multiple Text components are in the tree, only the last one is visible
@@ -61,11 +96,13 @@
 
 ## Component Issues
 
-### 6. Text color hardcoded to BLACK
-- **Issue**: `DaliTextComponent::ApplyProps()` hardcodes text color to `Dali::Color::BLACK`
-- **Location**: `src/components/DaliTextComponent.cpp:35`
-- **Fix needed**: Extract text color from React Native's TextProps
-- **Impact**: White/colored text on dark backgrounds is invisible
+### 6. Text color hardcoded to BLACK - RESOLVED ✓
+- **Issue**: Text color was hardcoded to `Dali::Color::BLACK`
+- **Fix**: Removed hardcoded BLACK, now extracts color from React Native's `textAttributes.foregroundColor`
+- **Files modified**:
+  - `src/DaliMountingManager.cpp` - Color extraction with proper fallback and logging
+  - `src/components/DaliTextComponent.cpp` - Removed legacy hardcoded color
+- **Verified**: White text (`color: 'white'`) now renders as `rgba(1, 1, 1, 1)`
 
 ## Feature Implementation
 

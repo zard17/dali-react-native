@@ -3,10 +3,11 @@
 
 Dali::Toolkit::TextLabel DaliTextComponent::New() {
   auto textLabel = Dali::Toolkit::TextLabel::New("Hello World");
+  // Use CENTER/CENTER to avoid TOP_LEFT rendering bug
   textLabel.SetProperty(Dali::Actor::Property::ANCHOR_POINT,
-                        Dali::AnchorPoint::TOP_LEFT);
+                        Dali::AnchorPoint::CENTER);
   textLabel.SetProperty(Dali::Actor::Property::PARENT_ORIGIN,
-                        Dali::ParentOrigin::TOP_LEFT);
+                        Dali::ParentOrigin::CENTER);
   return textLabel;
 }
 
@@ -31,6 +32,6 @@ void DaliTextComponent::ApplyProps(Dali::Toolkit::TextLabel textLabel,
   if (textPos != std::string::npos) {
     textLabel.SetProperty(Dali::Toolkit::TextLabel::Property::TEXT, textToShow);
   }
-  textLabel.SetProperty(Dali::Toolkit::TextLabel::Property::TEXT_COLOR,
-                        Dali::Color::BLACK);
+  // Note: Text color is now extracted from React Native's TextProps in DaliMountingManager
+  // Default color (BLACK) is set there as fallback
 }
