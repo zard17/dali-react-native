@@ -91,4 +91,5 @@ private:
   // Workaround Thread
   std::thread mWorkaroundThread;
   std::atomic<bool> mWorkaroundRunning{false};
+  std::atomic<bool> mShuttingDown{false};
 };

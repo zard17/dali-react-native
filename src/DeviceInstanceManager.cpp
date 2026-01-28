@@ -18,6 +18,28 @@ DeviceInstanceManager::DeviceInstanceManager() {
 }
 
 DeviceInstanceManager::~DeviceInstanceManager() {
+  std::cout << "DeviceInstanceManager Destroying..." << std::endl;
+
+  // Prevent transaction processing during shutdown
+  mShuttingDown = true;
+  mMountingManager = nullptr;
+
+  // Stop and unregister surface before destroying scheduler
+  StopSurface();
+
+  // Clear surface handler
+  mSurfaceHandler.reset();
+
+  // Reset scheduler (this will cleanup internal state)
+  if (mScheduler) {
+    mScheduler.reset();
+  }
+
+  // Reset other components
+  mRuntimeScheduler.reset();
+  mContextContainer.reset();
+  mRuntime.reset();
+
   std::cout << "DeviceInstanceManager Destroyed" << std::endl;
 }
 
@@ -192,6 +214,11 @@ void DeviceInstanceManager::SetMountingManager(
 void DeviceInstanceManager::schedulerDidFinishTransaction(
     const std::shared_ptr<const facebook::react::MountingCoordinator>
         &mountingCoordinator) {
+  // Skip transaction processing during shutdown
+  if (mShuttingDown) {
+    return;
+  }
+
   if (mMountingManager) {
     // Correct API usage based on earlier inspection
     auto transaction = mountingCoordinator->pullTransaction();
