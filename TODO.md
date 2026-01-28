@@ -54,6 +54,28 @@
 - **Fix needed**: Extract text color from React Native's TextProps
 - **Impact**: White/colored text on dark backgrounds is invisible
 
+## Feature Implementation
+
+### 7. Touch/Gesture handling
+- **Status**: Not implemented
+- **Required for**: Button presses, scrolling, gestures, interactive apps
+- **Implementation approach**:
+  - Connect DALi touch signals to React Native event system
+  - Map DALi `TouchEvent` to React Native touch events (onPress, onPressIn, onPressOut, onLongPress)
+  - Implement hit testing to determine which actor received the touch
+  - Route events through Fabric's EventEmitter system
+- **Files to create/modify**:
+  - `src/DaliMountingManager.cpp` - Register touch callbacks on actors
+  - Create event dispatcher to send touch events to JS
+  - Handle `Pressable`, `TouchableOpacity`, `Button` components
+- **DALi APIs to use**:
+  - `Actor::TouchedSignal()` - Connect to touch events
+  - `TouchEvent::GetPoint()` - Get touch coordinates
+  - `TouchEvent::GetState()` - Get touch state (DOWN, UP, MOTION, etc.)
+- **React Native side**:
+  - Events dispatched via `EventEmitter` stored in `mEventEmitterRegistry`
+  - Need to implement `dispatchEvent()` in mounting manager
+
 ## Working Features (for reference)
 - View components with backgroundColor ✓
 - Image components ✓
