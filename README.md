@@ -74,6 +74,8 @@ A window should appear displaying:
 
 ## Architecture
 
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture documentation.
+
 The renderer follows this flow:
 
 1. **JavaScriptCore** loads and executes `index.js`
