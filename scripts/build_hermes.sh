@@ -18,7 +18,7 @@ HERMES_VERSION="0.14.0"
 
 # Maven URL for prebuilt Hermes iOS (includes macOS framework)
 MAVEN_URL="https://repo1.maven.org/maven2/com/facebook/hermes/hermes-ios"
-TARBALL_URL="${MAVEN_URL}/${HERMES_VERSION}/hermes-ios-${HERMES_VERSION}-hermes-ios-debug.tar.gz"
+TARBALL_URL="${MAVEN_URL}/${HERMES_VERSION}/hermes-ios-${HERMES_VERSION}-hermes-ios-release.tar.gz"
 
 echo "==================================="
 echo "  Installing Hermes for macOS"

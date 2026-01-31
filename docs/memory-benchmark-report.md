@@ -1,6 +1,6 @@
 # Memory & Performance Benchmark Report
 
-**Date:** 2026-01-29
+**Date:** 2026-01-31
 **Platform:** macOS (Apple Silicon)
 
 ## JS Engine Comparison
@@ -9,64 +9,69 @@
 
 | JS Engine | Run 1 | Run 2 | Run 3 | Average |
 |-----------|-------|-------|-------|---------|
-| JavaScriptCore | 124.1 MB | 123.1 MB | 122.5 MB | **123.2 MB** |
-| Hermes 0.14.0 | 131.6 MB | 130.3 MB | 130.4 MB | **130.8 MB** |
+| JavaScriptCore | 123.3 MB | 123.7 MB | 123.3 MB | **123.4 MB** |
+| Hermes 0.14.0 (Release) | 129.2 MB | 129.6 MB | 129.9 MB | **129.5 MB** |
 
-**Difference:** Hermes uses ~7.6 MB more than JSC (+6.2%)
+**Difference:** Hermes uses ~6.1 MB more than JSC (+5.0%)
+
+### Hermes Debug vs Release
+
+| Build | Binary Size | Memory Usage |
+|-------|-------------|--------------|
+| Debug | 13 MB | 130.8 MB |
+| Release | 9.2 MB | 129.5 MB |
+
+**Release saves:** 3.8 MB binary size, 1.3 MB runtime memory
 
 ### Startup Time (Time to Bundle Execution)
 
 | Test | Run 1 | Run 2 | Run 3 | Average |
 |------|-------|-------|-------|---------|
-| Native DALi (1000 views) | 221 ms | 197 ms | 193 ms | **204 ms** |
-| React Native + JSC | 256 ms | 248 ms | 239 ms | **248 ms** |
-| React Native + Hermes | 255 ms | 240 ms | 273 ms | **256 ms** |
+| Native DALi (1000 views) | 539 ms* | 192 ms | 192 ms | **192 ms** |
+| React Native + JSC | 273 ms* | 238 ms | 243 ms | **240 ms** |
+| React Native + Hermes | 273 ms* | 254 ms | 249 ms | **252 ms** |
+
+*First run includes cold-start overhead (shader compilation, cache warming)
 
 **Observations:**
-- Native DALi is ~44 ms faster than RN (no JS parsing overhead)
-- JSC and Hermes have similar startup times (~8 ms difference)
-- RN overhead: ~44-52 ms for JS runtime initialization + bundle parsing
+- Native DALi is ~48-60 ms faster than RN (no JS overhead)
+- JSC is ~12 ms faster than Hermes for startup
+- After warm-up, all engines show consistent performance
 
-## Benchmark Tests (with Hermes)
+## Summary
 
-### View Test (100 Views)
-
-| Metric | Native DALi | RN + Hermes | Overhead |
-|--------|-------------|-------------|----------|
-| Memory | 102 MB | 135 MB | +32 MB (+31%) |
-
-### Image Test (100 Images)
-
-| Metric | Native DALi | RN + Hermes | Overhead |
-|--------|-------------|-------------|----------|
-| Memory | 96 MB | 123 MB | +27 MB (+28%) |
+| Metric | JSC | Hermes (Release) | Difference |
+|--------|-----|------------------|------------|
+| Memory | 123.4 MB | 129.5 MB | +6.1 MB (+5%) |
+| Startup | 240 ms | 252 ms | +12 ms (+5%) |
+| Binary | System | 9.2 MB | N/A |
 
 ## Analysis
 
-### Why JSC Uses Less Memory in This Test
+### Current Results
 
-The prebuilt Hermes framework from Maven Central may include:
-- Debug symbols (debug build variant)
-- Additional runtime features not stripped
+In these benchmarks, JSC outperforms Hermes slightly in both memory and startup time. This is because:
 
-For production, building Hermes from source with release optimizations would likely show different results.
+1. **JSC is system-provided** on macOS - no additional binary overhead
+2. **Hermes prebuilt** may not be fully optimized for macOS desktop
+3. **No bytecode precompilation** - Hermes parses JS source like JSC
 
-### Hermes Benefits (Not Shown in These Tests)
+### When Hermes Would Win
 
-1. **Bytecode Precompilation**: Compile JS to `.hbc` bytecode for faster cold starts
-2. **Better GC**: More predictable memory behavior in long-running apps
-3. **Smaller Binary**: On mobile platforms, Hermes binary is typically smaller
-4. **Debugging**: Better source maps and debugging experience
+1. **Bytecode precompilation**: `hermesc -emit-binary bundle.js -out bundle.hbc`
+   - Eliminates parsing time
+   - Faster cold starts
 
-### Recommendations
+2. **Mobile platforms**: Hermes binary is smaller than bundled JSC
 
-- For **memory-critical** applications: Consider JSC or optimize Hermes build
-- For **startup-critical** applications: Use Hermes with bytecode precompilation
-- For **long-running** applications: Hermes GC provides more stable memory over time
+3. **Long-running apps**: Hermes GC is more predictable
+
+4. **Large bundles**: Hermes bytecode is smaller than minified JS
 
 ## Test Environment
 
 - Window Size: 800x600
 - React Native: 0.83.1
-- Hermes: 0.14.0 (prebuilt from Maven Central)
+- Hermes: 0.14.0 (Release build from Maven Central)
 - DALi: 2.0.0
+- macOS: Apple Silicon
