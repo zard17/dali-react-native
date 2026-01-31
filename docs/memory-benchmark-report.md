@@ -1,104 +1,72 @@
-# DALi React Native Memory Benchmark Report
+# Memory & Performance Benchmark Report
 
 **Date:** 2026-01-29
 **Platform:** macOS (Apple Silicon)
-**Window Size:** 800x600
-**Graphics Backend:** GLES via ANGLE
 
-## Test Configuration
+## JS Engine Comparison
 
-- **Native DALi:** Direct C++ implementation using DALi Toolkit
-- **React Native + DALi:** JavaScript app rendered via Fabric to DALi backend
-- **Measurement:** RSS (Resident Set Size) in KB, measured after 5-8 seconds of app stabilization
-- **Runs:** 3 runs per test for consistency verification
+### Memory Usage (Main App - Flexbox Demo)
 
-## Results
+| JS Engine | Run 1 | Run 2 | Run 3 | Average |
+|-----------|-------|-------|-------|---------|
+| JavaScriptCore | 124.1 MB | 123.1 MB | 122.5 MB | **123.2 MB** |
+| Hermes 0.14.0 | 131.6 MB | 130.3 MB | 130.4 MB | **130.8 MB** |
 
-### Native DALi - 1000 Views
+**Difference:** Hermes uses ~7.6 MB more than JSC (+6.2%)
 
-| Run | RSS (KB) | RSS (MB) |
-|-----|----------|----------|
-| 1 | 105,008 | 102.5 |
-| 2 | 105,184 | 102.7 |
-| 3 | 104,544 | 102.1 |
-| **Average** | **104,912** | **102.5** |
+### Startup Time (Time to Bundle Execution)
 
-### Native DALi - 100 Images
+| Test | Run 1 | Run 2 | Run 3 | Average |
+|------|-------|-------|-------|---------|
+| Native DALi (1000 views) | 221 ms | 197 ms | 193 ms | **204 ms** |
+| React Native + JSC | 256 ms | 248 ms | 239 ms | **248 ms** |
+| React Native + Hermes | 255 ms | 240 ms | 273 ms | **256 ms** |
 
-| Run | RSS (KB) | RSS (MB) |
-|-----|----------|----------|
-| 1 | 98,480 | 96.2 |
-| 2 | 98,416 | 96.1 |
-| 3 | 98,416 | 96.1 |
-| **Average** | **98,437** | **96.1** |
+**Observations:**
+- Native DALi is ~44 ms faster than RN (no JS parsing overhead)
+- JSC and Hermes have similar startup times (~8 ms difference)
+- RN overhead: ~44-52 ms for JS runtime initialization + bundle parsing
 
-### React Native + DALi - 1000 Views
+## Benchmark Tests (with Hermes)
 
-| Run | RSS (KB) | RSS (MB) |
-|-----|----------|----------|
-| 1 | 128,848 | 125.8 |
-| 2 | 129,792 | 126.8 |
-| 3 | 130,128 | 127.1 |
-| **Average** | **129,589** | **126.6** |
+### View Test (100 Views)
 
-### React Native + DALi - 100 Images
+| Metric | Native DALi | RN + Hermes | Overhead |
+|--------|-------------|-------------|----------|
+| Memory | 102 MB | 135 MB | +32 MB (+31%) |
 
-| Run | RSS (KB) | RSS (MB) |
-|-----|----------|----------|
-| 1 | 119,504 | 116.7 |
-| 2 | 121,008 | 118.2 |
-| 3 | 120,368 | 117.5 |
-| **Average** | **120,293** | **117.5** |
+### Image Test (100 Images)
 
-## Summary Comparison
+| Metric | Native DALi | RN + Hermes | Overhead |
+|--------|-------------|-------------|----------|
+| Memory | 96 MB | 123 MB | +27 MB (+28%) |
 
-| Test | Native DALi | RN + DALi | Overhead (MB) | Overhead (%) |
-|------|-------------|-----------|---------------|--------------|
-| 1000 Views | 102.5 MB | 126.6 MB | +24.1 MB | +24% |
-| 100 Images | 96.1 MB | 117.5 MB | +21.4 MB | +22% |
+## Analysis
 
-## Key Findings
+### Why JSC Uses Less Memory in This Test
 
-1. **Consistent Results:** Memory measurements are highly consistent across runs (< 1% variance), indicating stable memory behavior.
+The prebuilt Hermes framework from Maven Central may include:
+- Debug symbols (debug build variant)
+- Additional runtime features not stripped
 
-2. **Fixed Overhead:** React Native adds approximately 22-24 MB of overhead regardless of the number of UI elements. This overhead includes:
-   - JavaScriptCore runtime
-   - React Native Fabric renderer
-   - Shadow tree and layout engine (Yoga)
-   - Bridge infrastructure
+For production, building Hermes from source with release optimizations would likely show different results.
 
-3. **Scalable Architecture:** The percentage overhead decreases as the number of elements increases, suggesting the architecture scales well for complex UIs.
+### Hermes Benefits (Not Shown in These Tests)
 
-4. **Reasonable Overhead:** ~22-24% memory overhead is acceptable for a cross-platform framework that provides:
-   - Declarative UI programming model
-   - Hot reloading during development
-   - Large ecosystem of JavaScript libraries
-   - Cross-platform code sharing
+1. **Bytecode Precompilation**: Compile JS to `.hbc` bytecode for faster cold starts
+2. **Better GC**: More predictable memory behavior in long-running apps
+3. **Smaller Binary**: On mobile platforms, Hermes binary is typically smaller
+4. **Debugging**: Better source maps and debugging experience
 
-## Test Details
+### Recommendations
 
-### View Test
-- Creates a 20x50 grid of colored rectangles (1000 total)
-- Each view is 20x20 pixels with unique background color
-- Uses absolute positioning
+- For **memory-critical** applications: Consider JSC or optimize Hermes build
+- For **startup-critical** applications: Use Hermes with bytecode precompilation
+- For **long-running** applications: Hermes GC provides more stable memory over time
 
-### Image Test
-- Creates a 10x10 grid of images (100 total)
-- Each image is 50x50 pixels
-- Loads from local PNG files (10 unique images, cycled)
-- Centered in window
+## Test Environment
 
-## Environment
-
-```
-DALi Version: 2.x (with ANGLE backend)
-React Native: 0.79.x (Fabric enabled)
-JS Engine: JavaScriptCore
-Window Mode: Windowed (800x600)
-```
-
-## Notes
-
-- Full-screen mode on Mac requires a Y-offset workaround due to an ANGLE rendering bug
-- Windowed mode (tested here) works correctly without workarounds
-- Memory measurements taken using `ps -o rss` command
+- Window Size: 800x600
+- React Native: 0.83.1
+- Hermes: 0.14.0 (prebuilt from Maven Central)
+- DALi: 2.0.0

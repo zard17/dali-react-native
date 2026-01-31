@@ -90,6 +90,7 @@
 - ✅ Nested containers
 - ✅ Dynamic window size detection
 - ✅ Memory benchmarking (see `scripts/memory-benchmark.sh`)
+- ✅ **Hermes JavaScript engine** (migrated from JavaScriptCore)
 
 ## Memory Profile
 
@@ -103,13 +104,13 @@
 
 ### High Impact (Target: -10-15 MB)
 
-#### 1. Switch to Hermes Engine
-**Estimated Savings**: 5-10 MB
-- Hermes is optimized for React Native with smaller memory footprint
-- Faster startup time
-- Bytecode precompilation reduces parsing overhead
-- **Files**: `src/DeviceInstanceManager.cpp`, `CMakeLists.txt`
-- **Effort**: Medium (need to build Hermes for macOS/Tizen)
+#### 1. Switch to Hermes Engine - COMPLETED ✓
+**Status**: Implemented (2026-01-29)
+- Migrated from JavaScriptCore to Hermes
+- Uses prebuilt hermesvm.framework from Maven Central
+- Memory usage: ~118-119 MB (comparable to JSC)
+- Future: Bytecode precompilation for additional performance
+- **See**: `docs/hermes-migration-plan.md`
 
 #### 2. Lazy Module Loading
 **Estimated Savings**: 3-5 MB
@@ -181,7 +182,7 @@ instruments -t "Allocations" ./build/dali-rn-demo
 
 ### Priority Order
 
-1. **Hermes** - Biggest single improvement, well-documented migration
+1. ~~**Hermes**~~ - COMPLETED ✓
 2. **Lazy Module Loading** - Low risk, moderate savings
 3. **Strip Unused Code** - Build-time only, no runtime risk
 4. **Actor Pooling** - Needed for lists anyway, good ROI

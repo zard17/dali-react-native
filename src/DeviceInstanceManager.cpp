@@ -4,7 +4,7 @@
 #include "TurboModuleRegistry.h"
 #include <fstream>
 #include <iostream>
-#include <jsc/JSCRuntime.h>
+#include <hermes/hermes.h>
 #include <jsi/jsi.h>
 #include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
 #include <react/renderer/runtimescheduler/RuntimeScheduler.h>
@@ -46,9 +46,14 @@ DeviceInstanceManager::~DeviceInstanceManager() {
 void DeviceInstanceManager::Initialize() {
   std::cout << "DeviceInstanceManager Initializing..." << std::endl;
 
-  // 1. Initialize JS Runtime (JSC)
-  mRuntime = facebook::jsc::makeJSCRuntime();
-  std::cout << "  -> JS Runtime Initialized" << std::endl;
+  // 1. Initialize JS Runtime (Hermes)
+  auto config = ::hermes::vm::RuntimeConfig::Builder()
+      .withGCConfig(::hermes::vm::GCConfig::Builder()
+          .withMaxHeapSize(32 << 20)  // 32MB max heap
+          .build())
+      .build();
+  mRuntime = facebook::hermes::makeHermesRuntime(config);
+  std::cout << "  -> JS Runtime (Hermes) Initialized" << std::endl;
 
   // 2. Initialize Runtime Executor
   auto runtime = mRuntime.get();

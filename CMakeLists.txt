@@ -11,6 +11,7 @@ pkg_check_modules(DALI REQUIRED IMPORTED_TARGET dali2-core dali2-adaptor dali2-t
 # Include React Native and Dependencies
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(ReactNative REQUIRED)
+find_package(Hermes REQUIRED)
 
 include_directories(
     ${React_INCLUDE_DIRS}
@@ -62,7 +63,9 @@ target_link_libraries(dali-rn-demo
   PkgConfig::DALI
   ${React_LIBRARIES}
   "-framework CoreFoundation" # Required by Folly/RN on macOS
-  "-framework JavaScriptCore" # For JSCRuntime
+  "-F${HERMES_ROOT}/lib"      # Framework search path for Hermes
+  "-framework hermesvm"       # Hermes JavaScript engine
+  "-Wl,-rpath,@executable_path/../lib"  # Runtime path for framework
 )
 
 target_include_directories(dali-rn-demo PRIVATE

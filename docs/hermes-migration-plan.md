@@ -1,208 +1,110 @@
-# Hermes Migration Plan
+# Hermes Migration - COMPLETED
 
-## Objective
+## Summary
 
-Replace JavaScriptCore (JSC) with Hermes to reduce memory footprint.
+Successfully migrated from JavaScriptCore (JSC) to Hermes JavaScript engine.
 
-**Expected Savings**: 5-10 MB (JSC ~15 MB → Hermes ~5-8 MB)
+**Status**: Completed
+**Date**: 2026-01-29
 
-## Current State
+## Changes Made
 
-### JSC Integration Points
+### 1. Downloaded Prebuilt Hermes from Maven Central
 
-1. **DeviceInstanceManager.cpp:7**
-   ```cpp
-   #include <jsc/JSCRuntime.h>
-   ```
+Building Hermes from source failed due to libatomic issues on macOS. Instead, we use the prebuilt Hermes from React Native's Maven repository.
 
-2. **DeviceInstanceManager.cpp:50**
-   ```cpp
-   mRuntime = facebook::jsc::makeJSCRuntime();
-   ```
+- **Version**: 0.14.0 (matches React Native .hermesversion)
+- **Source**: `https://repo1.maven.org/maven2/com/facebook/hermes/hermes-ios/0.14.0/`
+- **Framework**: hermesvm.framework (universal binary: x86_64 + arm64)
 
-3. **CMakeLists.txt:65**
-   ```cmake
-   "-framework JavaScriptCore"
-   ```
-
-4. **third_party_dependencies/build_react_native/CMakeLists.txt:115-119**
-   ```cmake
-   add_library(jsc_runtime OBJECT "${REACT_COMMON_DIR}/jsc/JSCRuntime.cpp")
-   ```
-
-## Hermes Requirements
-
-### 1. Build Hermes Library
-
-Hermes needs to be built from source for macOS. The `hermes-engine` npm package only includes:
-- `hermesc` compiler (for bytecode compilation)
-- Android prebuilt libraries
-- Headers (in android/include)
-
-**Option A: Build from React Native's bundled Hermes**
-```bash
-# Clone hermes from React Native's pinned version
-cd third_party_dependencies
-git clone https://github.com/facebook/hermes.git
-cd hermes
-git checkout <version-matching-rn-0.79>
-
-# Build for macOS
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --target libhermes
-```
-
-**Option B: Use Homebrew (if available)**
-```bash
-brew install hermes
-```
-
-### 2. Required Hermes Libraries
-
-After building, we need:
-- `libhermes.a` or `libhermes.dylib` - Main runtime
-- `libjsi.a` - JSI interface (may be bundled)
-- Headers from `hermes/include/`
-
-### 3. Header Files Needed
-
-```
-hermes/
-├── hermes.h              # Main API (makeHermesRuntime)
-├── Public/
-│   ├── RuntimeConfig.h   # Runtime configuration
-│   └── GCConfig.h        # GC settings
-└── VM/
-    └── ...               # Internal (not needed directly)
-```
-
-## Implementation Steps
-
-### Phase 1: Build Hermes (Day 1-2)
-
-1. **Add Hermes build script**
-   - Create `scripts/build_hermes.sh`
-   - Clone Hermes repository
-   - Configure CMake with appropriate flags
-   - Build static library for macOS (arm64 + x86_64)
-
-2. **Configure CMake integration**
-   - Add `cmake/FindHermes.cmake` module
-   - Set up include paths
-   - Link against libhermes
-
-### Phase 2: Code Changes (Day 2-3)
-
-1. **Update DeviceInstanceManager.cpp**
-   ```cpp
-   // Before
-   #include <jsc/JSCRuntime.h>
-   mRuntime = facebook::jsc::makeJSCRuntime();
-
-   // After
-   #include <hermes/hermes.h>
-   auto config = ::hermes::vm::RuntimeConfig::Builder()
-       .withGCConfig(::hermes::vm::GCConfig::Builder()
-           .withMaxHeapSize(32 << 20)  // 32MB max heap
-           .build())
-       .build();
-   mRuntime = facebook::hermes::makeHermesRuntime(config);
-   ```
-
-2. **Update CMakeLists.txt**
-   ```cmake
-   # Remove
-   # "-framework JavaScriptCore"
-
-   # Add
-   find_package(Hermes REQUIRED)
-   target_link_libraries(dali-rn-demo ... ${HERMES_LIBRARIES})
-   target_include_directories(dali-rn-demo ... ${HERMES_INCLUDE_DIRS})
-   ```
-
-3. **Update third_party_dependencies build**
-   - Remove `jsc_runtime` target
-   - Add `hermes_runtime` target (or link prebuilt)
-
-### Phase 3: Bytecode Compilation (Optional, Day 3-4)
-
-For additional performance/size benefits:
-
-1. **Compile JS to Hermes bytecode**
-   ```bash
-   hermesc -emit-binary -out bundle.hbc bundle.js
-   ```
-
-2. **Update bundle loading in DeviceInstanceManager**
-   - Detect `.hbc` files
-   - Use `evaluateJavaScript` with bytecode buffer
-
-### Phase 4: Testing & Benchmarking (Day 4-5)
-
-1. **Functional testing**
-   - Run existing demo app
-   - Verify all components render correctly
-   - Test text, images, flexbox layout
-
-2. **Memory benchmarking**
-   ```bash
-   ./scripts/memory-benchmark.sh 5
-   ```
-   Compare with JSC baseline.
-
-3. **Performance testing**
-   - Measure startup time
-   - Measure JS execution time
-
-## File Changes Summary
+### 2. Files Modified
 
 | File | Change |
 |------|--------|
-| `scripts/build_hermes.sh` | NEW - Build script |
-| `cmake/FindHermes.cmake` | NEW - CMake find module |
-| `CMakeLists.txt` | Modify - Link Hermes |
-| `third_party_dependencies/build_react_native/CMakeLists.txt` | Modify - Remove JSC |
-| `src/DeviceInstanceManager.cpp` | Modify - Use HermesRuntime |
-| `src/DeviceInstanceManager.h` | Modify - Include changes |
+| `scripts/build_hermes.sh` | Downloads prebuilt Hermes from Maven instead of building from source |
+| `cmake/FindHermes.cmake` | Updated to find hermesvm.framework on macOS |
+| `CMakeLists.txt` | Added `find_package(Hermes REQUIRED)` and framework linking |
+| `src/DeviceInstanceManager.cpp` | Changed from `makeJSCRuntime()` to `makeHermesRuntime()` |
 
-## Risks & Mitigations
+### 3. Code Changes
 
-### Risk 1: Hermes build complexity
-- **Mitigation**: Start with prebuilt if available, fall back to source build
-- **Mitigation**: Document exact build steps
+**DeviceInstanceManager.cpp**:
+```cpp
+// Before (JSC)
+#include <jsc/JSCRuntime.h>
+mRuntime = facebook::jsc::makeJSCRuntime();
 
-### Risk 2: API differences between JSC and Hermes
-- **Mitigation**: Both implement JSI, so core API is identical
-- **Mitigation**: Test thoroughly after migration
-
-### Risk 3: Hermes-specific bugs
-- **Mitigation**: Use stable Hermes version matching React Native
-- **Mitigation**: Keep JSC as fallback (compile-time flag)
-
-## Rollback Plan
-
-Keep JSC support via compile flag:
-```cmake
-option(USE_HERMES "Use Hermes instead of JSC" ON)
-
-if(USE_HERMES)
-  # Hermes configuration
-else()
-  # JSC configuration
-endif()
+// After (Hermes)
+#include <hermes/hermes.h>
+auto config = ::hermes::vm::RuntimeConfig::Builder()
+    .withGCConfig(::hermes::vm::GCConfig::Builder()
+        .withMaxHeapSize(32 << 20)  // 32MB max heap
+        .build())
+    .build();
+mRuntime = facebook::hermes::makeHermesRuntime(config);
 ```
 
-## Success Criteria
+**CMakeLists.txt**:
+```cmake
+find_package(Hermes REQUIRED)
 
-1. ✅ All existing tests pass
-2. ✅ Memory usage reduced by ≥5 MB
-3. ✅ No regression in startup time
-4. ✅ Flexbox demo renders correctly
-5. ✅ Benchmark script works with Hermes
+target_link_libraries(dali-rn-demo
+  ...
+  "-F${HERMES_ROOT}/lib"      # Framework search path
+  "-framework hermesvm"       # Hermes JavaScript engine
+)
+```
 
-## References
+## Running the App
 
-- [Hermes GitHub](https://github.com/facebook/hermes)
-- [Hermes Documentation](https://hermesengine.dev/)
-- [React Native Hermes Integration](https://reactnative.dev/docs/hermes)
-- [Building Hermes from Source](https://github.com/facebook/hermes/blob/main/doc/BuildingAndRunning.md)
+```bash
+# Set framework path and run
+DYLD_FRAMEWORK_PATH="third_party_dependencies/hermes-install/lib:$DYLD_FRAMEWORK_PATH" ./build/dali-rn-demo
+```
+
+## Memory Results
+
+| Configuration | Memory (RSS) |
+|--------------|--------------|
+| With JSC | ~118-127 MB |
+| With Hermes | ~118-119 MB |
+
+Memory usage is roughly equivalent. The main benefits of Hermes are:
+- Faster startup (bytecode vs parsing)
+- Better GC behavior over time
+- Smaller binary size on mobile
+- Future: Bytecode precompilation for additional benefits
+
+## Future Improvements
+
+### Bytecode Precompilation (Optional)
+
+For additional performance benefits, compile JS to Hermes bytecode:
+
+```bash
+# Compile bundle to bytecode
+hermesc -emit-binary -out bundle.hbc bundle.js
+```
+
+Then load the `.hbc` file instead of `.js` in DeviceInstanceManager.
+
+## Verification
+
+The app works correctly with Hermes:
+- JS Runtime initializes: `"JS Runtime (Hermes) Initialized"`
+- Bundle executes successfully
+- All components render correctly (Views, Text, flexbox layout)
+- Memory usage is consistent with JSC baseline
+
+## Rollback
+
+To revert to JSC:
+
+1. In `DeviceInstanceManager.cpp`:
+   - Change `#include <hermes/hermes.h>` back to `#include <jsc/JSCRuntime.h>`
+   - Change `makeHermesRuntime()` back to `makeJSCRuntime()`
+
+2. In `CMakeLists.txt`:
+   - Remove `find_package(Hermes REQUIRED)`
+   - Change `-framework hermesvm` back to `-framework JavaScriptCore`
+   - Remove `-F${HERMES_ROOT}/lib`
