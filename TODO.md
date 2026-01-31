@@ -96,21 +96,25 @@
 
 | Component | Memory |
 |-----------|--------|
-| Native DALi base | ~96-103 MB |
-| React Native overhead | ~22-24 MB |
-| Per 1000 Views | ~6 MB additional |
+| Native DALi base | ~96-102 MB |
+| React Native + Hermes | ~129.5 MB |
+| React Native + JSC | ~123.4 MB |
+| RN overhead (Hermes) | ~27-33 MB |
+
+See `docs/memory-benchmark-report.md` for detailed comparison.
 
 ## Memory Optimization Ideas
 
 ### High Impact (Target: -10-15 MB)
 
 #### 1. Switch to Hermes Engine - COMPLETED ✓
-**Status**: Implemented (2026-01-29)
-- Migrated from JavaScriptCore to Hermes
-- Uses prebuilt hermesvm.framework from Maven Central
-- Memory usage: ~118-119 MB (comparable to JSC)
-- Future: Bytecode precompilation for additional performance
-- **See**: `docs/hermes-migration-plan.md`
+**Status**: Implemented (2026-01-31)
+- Migrated from JavaScriptCore to Hermes 0.14.0
+- Uses prebuilt hermesvm.framework (release) from Maven Central
+- **Results**: JSC 123.4 MB vs Hermes 129.5 MB (+5%)
+- JSC slightly outperforms Hermes on macOS desktop
+- Future: Bytecode precompilation may improve Hermes performance
+- **See**: `docs/memory-benchmark-report.md`
 
 #### 2. Lazy Module Loading
 **Estimated Savings**: 3-5 MB
